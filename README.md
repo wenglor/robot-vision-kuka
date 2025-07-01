@@ -10,6 +10,7 @@ This repository contains example configuration and KRL program files to set up a
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Required Files](#required-files)
 - [Configuration](#configuration)
   - [1. Edit network setup in wenglorVision.xml](#1-edit-network-setup-in-wenglorvisionxml)
   - [2. Edit Parameter in wenglorUserConfig.src](#2-edit-parameter-in-wengloruserconfigsrc)
@@ -17,7 +18,7 @@ This repository contains example configuration and KRL program files to set up a
 - [Troubleshooting](#troubleshooting)
   - [Communication errors](#communication-errors)
   - [Calibration failed](#calibration-failed)
-- [Required Files](#required-files)
+- [Support](#support)
 
 ---
 
@@ -29,6 +30,18 @@ This repository contains example configuration and KRL program files to set up a
 - [B60](https://www.wenglor.com/de/Machine-Vision/Smart-Cameras-und-Vision-Sensoren/Smart-Camera-B60/c/cxmCID221375) with Firmware version 1.3 or newer
 - [Machine Vision Controller - MVC](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Controller/c/cxmCID221381) with Firmware Version 1.0 or newer
 - A [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for the calibration and the detection
+
+---
+
+## Required Files
+
+sources/  
+├─ [wenglorGlobal.dat](sources/wenglorGlobal.dat)  
+├─ [wenglorGlobal.src](sources/wenglorGlobal.src)  
+├─ [wenglorMain.src](sources/wenglorMain.src)  
+├─ [wenglorUserConfig.dat](sources/wenglorUserConfig.dat)  
+├─ [wenglorUserConfig.src](sources/wenglorUserConfig.src)  
+└─ [wenglorVision.xml](sources/wenglorVision.xml)
 
 ---
 
@@ -49,7 +62,7 @@ This repository contains example configuration and KRL program files to set up a
 
 ## Configuration
 
-### 1. Edit network setup in wenglorVision.xml
+### 1. Edit Network Setup in wenglorVision.xml
 
 ```xml
 <EXTERNAL>
@@ -109,7 +122,7 @@ This repository contains example configuration and KRL program files to set up a
 
 </details>
 
-### 3. Teach poses and add movement commands
+### 3. Teach Poses and add Movement commands
 
 If you taught more than 5 poses remember to update the number of calibration poses
 
@@ -210,7 +223,7 @@ END
 
 ## Troubleshooting
 
-### Communication errors
+### Communication Errors
 
 - Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
 - Check network connectivity/firewall
@@ -222,11 +235,6 @@ END
 
 ---
 
-## Required Files
+## Support
 
-- [wenglorGlobal.dat](sources/wenglorGlobal.dat)
-- [wenglorGlobal.src](sources/wenglorGlobal.src)
-- [wenglorMain.src](sources/wenglorMain.src)
-- [wenglorUserConfig.dat](sources/wenglorUserConfig.dat)
-- [wenglorUserConfig.src](sources/wenglorUserConfig.src)
-- [wenglorVision.xml](sources/wenglorVision.xml)
+In case of any error or unexpected behavior feel free to check the [issue section](../..issues) and create a new one if needed.
