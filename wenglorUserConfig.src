@@ -1,0 +1,158 @@
+&ACCESS RV1
+&REL 5
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEF wenglorUserConfig( )
+   ;**************************************
+   ;
+   ; Module: wenglorUserConfig
+   ; Author: wenglor sensoric GmbH
+   ; Version: 2.0.0
+   ;
+   ; Description:
+   ;   The file manages all user
+   ;   configurations.
+   ;
+   ;**************************************
+   ;FOLD INI;%{PE}
+      ;FOLD BASISTECH INI
+         GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+         INTERRUPT ON 3 
+         BAS (#INITMOV,0 )
+      ;ENDFOLD (BASISTECH INI)
+      ;FOLD USER INI
+         ;Make your modifications here
+         
+      ;ENDFOLD (USER INI)
+   ;ENDFOLD (INI)   
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Name of the xml file  
+   g_connection_name[]="wenglorVision"   
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Comment out the correct line depending
+   ; on the selected camera/robot setup
+   g_use_case[]="camera_not_on_robot"
+   ;g_use_case[]="camera_on_robot"
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Comment out the correct line depending
+   ; on the selected calibration board
+   ;g_calib_target[]="zvzj001"
+   ;g_calib_target[]="zvzj002"
+   g_calib_target[]="zvzj003"
+   ;g_calib_target[]="zvzj004"
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Adjust the number of calibration poses 
+   ; you want to use. 5 poses are required
+   ; at least.
+   g_num_calibration_poses = 5
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Comment out the correct line depending
+   ; on the selected detection
+   g_detection_case[]="single"
+   ;g_detection_case[]="multi"
+   ;----------------------------------------
+   ;----------------------------------------
+END
+
+GLOBAL DEF call_calibration_job()
+   ; change job name here
+   send_simple_command("job:change[calibration.u3p];")
+END
+
+GLOBAL DEF call_detection_job()
+   ; change job name here
+   send_simple_command("job:change[find_objects.u3p];")
+END
+
+GLOBAL DEF calibration_pose(pose_num:IN)
+   INT pose_num
+   SWITCH pose_num
+      CASE 1
+         ; Add movement to calibration pose 1 here.
+         ;
+         
+      CASE 2
+         ; Add movement to calibration pose 2 here.
+         ;
+         
+      CASE 3
+         ; Add movement to calibration pose 3 here.
+         ;
+         
+      CASE 4
+         ; Add movement to calibration pose 4 here.
+         ;
+         
+      CASE 5
+         ; Add movement to calibration pose 5 here.
+         ;
+         
+      ;------------------------------------
+      ;------------------------------------
+      ; Add more poses by copy "CASE #" and
+      ; increase the pose number e.g.: CASE 6
+      ; Make sure g_num_calibration_poses 
+      ; above has the right value.
+      ;
+      
+      DEFAULT
+         ; no movement
+   ENDSWITCH
+   
+END
+
+GLOBAL DEF detection_pose()
+   ; Add movement to detection_pose here.
+   ;
+   
+END
+
+GLOBAL DEF safety_pose()
+   ; Add movement to pose here.
+   ; use case camera not on robot
+   ; for removing calibration board
+   ;
+   
+END
+
+GLOBAL DEF validation_movement()
+   DECL FRAME p_valid
+   DECL INT safety_z_offset_mm
+   
+   ; Edit safety offset here
+   safety_z_offset_mm = 5
+   
+   detection_pose()
+   WAIT SEC 1
+   p_valid = get_validation_pose(safety_z_offset_mm)
+   ; Add movement to pose here. Make sure
+   ; that the assignment to the pose is correct.
+   ; Unfold movement section below to ensure
+   ; the movement target is exactly named as
+   ; the p_valid variable above.
+   ; 
+   
+END
+
+GLOBAL DEF object_movement(p_obj:IN)
+   DECL FRAME p_obj  
+   ; Add movement to pose here. Make sure
+   ; that the assignment to the pose is correct.
+   ; Unfold movement section below to ensure
+   ; the movement target is exactly named as
+   ; the p_obj variable above.
+   ; 
+
+END
+
+GLOBAL DEF test_calibration_poses()
+   INT i
+   FOR i=1 to g_num_calibration_poses
+      calibration_pose(i)
+   ENDFOR
+END

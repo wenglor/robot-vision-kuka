@@ -1,0 +1,122 @@
+&ACCESS RVP
+&REL 1
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEF wenglorMain( )
+   ;**************************************
+   ;
+   ; Module: wenglorMain
+   ; Author: wenglor sensoric GmbH
+   ; Version: 2.0.0
+   ;
+   ; Description:
+   ;   This is the main file that manages
+   ;   the calibration of the camera to
+   ;   the robot and the object detection. 
+   ;
+   ;**************************************
+   DECL CHAR job_name[200]
+   DECL FRAME object_pose
+   DECL INT num_objects
+   DECL INT index
+   DECL INT shape_model
+   DECL CHAR additional_value[100]
+   DECL KrlMsg_T msg
+   DECL KrlMsgPar_T par[3]
+   DECL KrlMsgOpt_T opt
+   DECL KrlMsgDlgSK_T SK[7]
+   INT nHandle, keynumber
+   ;FOLD INI;%{PE}
+      ;FOLD BASISTECH INI
+         GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+         INTERRUPT ON 3 
+         BAS (#INITMOV,0 )
+      ;ENDFOLD (BASISTECH INI)
+      ;FOLD USER INI
+         ;Make your modifications here
+         
+      ;ENDFOLD (USER INI)
+   ;ENDFOLD (INI)
+   ; init
+   wenglorUserConfig()
+   
+   ; try to connect with wenglor robot server
+   set_up_connection()
+   
+   ; check current state
+   update_sensor_state()
+   IF (g_camera_error) THEN
+      MsgNotify(g_error_msg[])
+      close_connection()
+      RETURN
+   ENDIF
+   
+   ; do only calibrate camera to robot
+   ; if it has not already been done
+   IF (g_calibration_done == FALSE) THEN
+      MsgNotify("No calibration found. Starting calibration now.")
+      calibrate_cam_to_rob()
+      
+      msg = {modul[] "wenglorMain", Nr 1, msg_txt[] "Continue with detection?"}
+      SK[1] = {sk_Type #value, sk_txt[] "Yes"}
+      SK[2] = {sk_Type #value, sk_txt[] "No"}
+      nHandle = Set_KrlDlg (msg, par[], SK[], opt)
+      IF (nHandle > 0) THEN
+         WHILE (Exists_KrlDlg(nHandle, keynumber))
+            WAIT SEC 0.1
+         ENDWHILE
+         IF (keynumber == 2) THEN
+            RETURN
+         ENDIF
+      ENDIF
+   ENDIF
+   
+   ; check current state
+   update_sensor_state()
+   IF (g_camera_error) THEN
+      MsgNotify(g_error_msg[])
+      close_connection()
+      RETURN
+   ENDIF
+   
+   ; check if calibration is available
+   IF (g_calibration_done == FALSE) THEN
+      MsgNotify("Exit program as calibration failed.")
+      close_connection()
+      RETURN
+   ENDIF
+   
+   ; get current job name
+   job_name[] = read_current_job_name() 
+   
+   ; load detection job
+   call_detection_job()
+   IF (g_camera_error) THEN
+      close_connection()
+      RETURN
+   ENDIF
+   
+   ; move to detection pose
+   detection_pose()
+   
+   ; single / multi object detection and movement
+   object_pose = detect_objects()
+   
+   IF (StrComp(g_detection_case[], "single", #NOT_CASE_SENS)) THEN
+      object_movement(object_pose)
+   ENDIF
+   
+   IF (StrComp(g_detection_case[], "multi", #NOT_CASE_SENS)) THEN
+      num_objects = read_num_objects()
+      FOR index = 0 TO num_objects-1 STEP 1
+         object_pose = read_pose_via_index(index)
+         object_movement(object_pose)
+         shape_model = read_shape_via_index(index)
+         additional_value[] = read_value_via_index(index)
+         detection_pose()
+      ENDFOR 
+   ENDIF
+   
+   ; close connection with wenglor robot server
+   close_connection()
+END
