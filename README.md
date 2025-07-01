@@ -2,44 +2,55 @@
 
 **Version:** 2.0.0
 
-> **Note** This repository contains example configuration and KRL program files to set up and start the generic vision interface to wenglor vision devices on your KUKA robot.
+This repository contains example configuration and KRL program files to set up and start the generic vision interface to wenglor vision devices on your KUKA robot.
 
 ---
-##  Contents
+
+## Contents
+
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
-  - [1. Edit *wenglorVision.xml*](#1-edit-network-setup-in-wenglorvisionxml)
-  - [2. Edit *wenglorUserConfig.src*](#2-edit-parameter-in-wengloruserconfigsrc)
-  - [3. Teach Robot Poses](#3-teach-poses-and-add-movement-commands)
+  - [1. Edit network setup in wenglorVision.xml](#1-edit-network-setup-in-wenglorvisionxml)
+  - [2. Edit Parameter in wenglorUserConfig.src](#2-edit-parameter-in-wengloruserconfigsrc)
+  - [3. Teach poses and add movement commands](#3-teach-poses-and-add-movement-commands)
 - [Troubleshooting](#troubleshooting)
+  - [Communication errors](#communication-errors)
+  - [Calibration failed](#calibration-failed)
 - [Required Files](#required-files)
+
 ---
 
 ## Prerequisites
+
 - Basic KRL knowledge
 - EthernetKRL support
 - KUKA Robot Controller (KRC) with KRL support
 - [B60](https://www.wenglor.com/de/Machine-Vision/Smart-Cameras-und-Vision-Sensoren/Smart-Camera-B60/c/cxmCID221375) with Firmware version 1.3 or newer
 - [Machine Vision Controller - MVC](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Controller/c/cxmCID221381) with Firmware Version 1.0 or newer
-- A valid [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for the calibration and the detection
+- A [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for the calibration and the detection
+
 ---
 
 ## Quick Start
+
 1. Download the [required files](#required-files)
 2. Copy them to your robot controller.
 
-   | Sources                                | Destination                                      |
-   |----------------------------------------|--------------------------------------------------|
-   | [wenglorVision.xml](wenglorVision.xml) | `C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\` |
-   | *.src and *.dat files                  | `C:\KRC\R1\Program\`                             |
+   | Sources                                        | Destination                                      |
+   |------------------------------------------------|--------------------------------------------------|
+   | [wenglorVision.xml](sources/wenglorVision.xml) | `C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\` |
+   | .src and .dat files                            | `C:\KRC\R1\Program\`                             |
 
 3. Follow the [configuration](#configuration) steps.
-4. Run the program [wenglorMain.src](wenglorMain.src) on your robot.
+4. Run the program [wenglorMain.src](sources/wenglorMain.src) on your robot.
+
 ---
 
 ## Configuration
+
 ### 1. Edit network setup in wenglorVision.xml
+
 ```xml
 <EXTERNAL>
     <IP>192.168.100.1</IP> <!-- IP address of the vision device -->
@@ -47,7 +58,9 @@
     <TYPE>Server</TYPE>
 </EXTERNAL>
 ```
+
 ### 2. Edit Parameter in wenglorUserConfig.src
+
 <details>
    <summary>Click to see the relevant parameter adjustments in the wenglorUserConfig.src file </summary>
 
@@ -93,10 +106,12 @@
       send_simple_command("job:change[find_objects.u3p];")     <!-- Update to your detection job name. -->
    END
 ```
+
 </details>
 
 ### 3. Teach poses and add movement commands
->If you taught more than 5 poses remember to update the number of calibration poses
+
+If you taught more than 5 poses remember to update the number of calibration poses
 
 <details>
    <summary>Click to see where to set the poses in the wenglorUserConfig.src file </summary>
@@ -190,24 +205,28 @@ GLOBAL DEF test_calibration_poses()                <!-- Add to wenglorMain.src t
    ENDFOR
 END
 ```
+
 </details>
 
 ## Troubleshooting
+
 ### Communication errors
-  - Verify IP/port in [wenglorVision.xml](wenglorVision.xml)
-  - Check network connectivity/firewall
+
+- Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
+- Check network connectivity/firewall
+
 ### Calibration failed
-  - Ensure your number of calibration poses set equals *g_num_calibration_poses*
-  - Match *g_connection_name* with XML filename
+
+- Ensure your number of calibration poses set equals *g_num_calibration_poses*
+- Match *g_connection_name* with XML filename
+
 ---
 
 ## Required Files
-* [wenglorGlobal.dat](wenglorGlobal.dat)
-* [wenglorGlobal.src](wenglorGlobal.src)
-* [wenglorMain.src](wenglorMain.src)
-* [wenglorUserConfig.dat](wenglorUserConfig.dat)
-* [wenglorUserConfig.src](wenglorUserConfig.src)
-* [wenglorVision.xml](wenglorVision.xml)
 
-
-##
+- [wenglorGlobal.dat](sources/wenglorGlobal.dat)
+- [wenglorGlobal.src](sources/wenglorGlobal.src)
+- [wenglorMain.src](sources/wenglorMain.src)
+- [wenglorUserConfig.dat](sources/wenglorUserConfig.dat)
+- [wenglorUserConfig.src](sources/wenglorUserConfig.src)
+- [wenglorVision.xml](sources/wenglorVision.xml)
