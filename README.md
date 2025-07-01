@@ -2,53 +2,40 @@
 
 **Version:** 2.0.0
 
-This repository contains example configuration and KRL program files to set up and start the generic vision interface to wenglor vision devices on your KUKA robot.
+This repository demonstrates how to use the Generic Vision Interface with wenglor vision devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
 
 ---
 
-## Contents
+## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Required Files](#required-files)
-- [Configuration](#configuration)
-  - [1. Edit network setup in wenglorVision.xml](#1-edit-network-setup-in-wenglorvisionxml)
-  - [2. Edit Parameter in wenglorUserConfig.src](#2-edit-parameter-in-wengloruserconfigsrc)
-  - [3. Teach poses and add movement commands](#3-teach-poses-and-add-movement-commands)
-- [Troubleshooting](#troubleshooting)
-  - [Communication errors](#communication-errors)
-  - [Calibration failed](#calibration-failed)
-- [Support](#support)
+1. [Prerequisites](#prerequisites)
+2. [Installation](#installation)
+3. [Running the Sample Program](#running-the-sample-program)
+4. [Configuration](#configuration)
+   1. [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
+   2. [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
+   3. [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc))
+5. [Troubleshooting](#troubleshooting)
+   1. [Communication errors](#communication-errors)
+   2. [Calibration failed](#calibration-failed)
+6. [Support & Feedback](#support--feedback)
 
 ---
 
 ## Prerequisites
 
-- Basic KRL knowledge
-- EthernetKRL support
+- Basic knowledge of **KRL** (KUKA Robot Language)
+- **EthernetKRL** support
 - KUKA Robot Controller (KRC) with KRL support
-- [B60](https://www.wenglor.com/de/Machine-Vision/Smart-Cameras-und-Vision-Sensoren/Smart-Camera-B60/c/cxmCID221375) with Firmware version 1.3 or newer
-- [Machine Vision Controller - MVC](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Controller/c/cxmCID221381) with Firmware Version 1.0 or newer
-- A [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for the calibration and the detection
+- [B60](https://www.wenglor.com/de/Machine-Vision/Smart-Cameras-und-Vision-Sensoren/Smart-Camera-B60/c/cxmCID221375) (firmware >= 1.3) or [Machine Vision Controller (MVC)](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Controller/c/cxmCID221381) (firmware >= 1.0)
+- A [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for calibration and object detection
 
 ---
 
-## Required Files
+## Installation
 
-sources/  
-├─ [wenglorGlobal.dat](sources/wenglorGlobal.dat)  
-├─ [wenglorGlobal.src](sources/wenglorGlobal.src)  
-├─ [wenglorMain.src](sources/wenglorMain.src)  
-├─ [wenglorUserConfig.dat](sources/wenglorUserConfig.dat)  
-├─ [wenglorUserConfig.src](sources/wenglorUserConfig.src)  
-└─ [wenglorVision.xml](sources/wenglorVision.xml)
-
----
-
-## Quick Start
-
-1. Download the [required files](#required-files)
-2. Copy them to your robot controller.
+1. Download the files from the [sources](sources) directory.
+2. Copy them to the robot controller.
 
    | Sources                                        | Destination                                      |
    |------------------------------------------------|--------------------------------------------------|
@@ -60,9 +47,17 @@ sources/
 
 ---
 
+## Running the Sample Program
+
+1. Connect to the robot controller.
+2. On the KUKA teach panel, load the wenglorMain.src program.
+3. Start execution and follow the console logs.
+
+---
+
 ## Configuration
 
-### 1. Edit Network Setup in wenglorVision.xml
+### Network Setup (`wenglorVision.xml`)
 
 ```xml
 <EXTERNAL>
@@ -72,7 +67,7 @@ sources/
 </EXTERNAL>
 ```
 
-### 2. Edit Parameter in wenglorUserConfig.src
+### Adjusting Parameter (`wenglorUserConfig.src`)
 
 <details>
    <summary>Click to see the relevant parameter adjustments in the wenglorUserConfig.src file </summary>
@@ -122,7 +117,7 @@ sources/
 
 </details>
 
-### 3. Teach Poses and add Movement commands
+### Teaching Poses and Defining Movements (`wenglorUserConfig.src`)
 
 If you taught more than 5 poses remember to update the number of calibration poses
 
@@ -230,11 +225,12 @@ END
 
 ### Calibration failed
 
-- Ensure your number of calibration poses set equals *g_num_calibration_poses*
+- Ensure your taught number of calibration poses equals *g_num_calibration_poses*
 - Match *g_connection_name* with XML filename
 
 ---
 
-## Support
+## Support & Feedback
 
-In case of any error or unexpected behavior feel free to check the [issue section](../../issues) and create a new one if needed.
+- **Bugs:** Please open a new Issue in the [GitHub Issues section]((../../issues)) if needed
+- **Feature Requests & Ideas:** Discuss suggestions in the Discussions → Ideas category under [GitHub Discussions](../../discussions)
