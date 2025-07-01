@@ -237,4 +237,4 @@ END
 
 ## Support
 
-In case of any error or unexpected behavior feel free to check the [issue section](../..issues) and create a new one if needed.
+In case of any error or unexpected behavior feel free to check the [issue section](../../issues) and create a new one if needed.
