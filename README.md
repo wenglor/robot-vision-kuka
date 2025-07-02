@@ -14,7 +14,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 4. [Configuration](#configuration)
    1. [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
    2. [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
-   3. [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc))
+   3. [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
 5. [Troubleshooting](#troubleshooting)
    1. [Communication errors](#communication-errors)
    2. [Calibration failed](#calibration-failed)
