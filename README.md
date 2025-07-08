@@ -28,7 +28,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 - **EthernetKRL** support
 - KUKA Robot Controller (KRC) with KRL support
 - [B60](https://www.wenglor.com/de/Machine-Vision/Smart-Cameras-und-Vision-Sensoren/Smart-Camera-B60/c/cxmCID221375) (firmware >= 1.3) or [Machine Vision Controller (MVC)](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Controller/c/cxmCID221381) (firmware >= 1.0)
-- A [univision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for calibration and object detection
+- A [uniVision](https://www.wenglor.com/de/Machine-Vision/Machine-Vision-Software/Bildverarbeitungssoftware-uniVision-3/c/cxmCID222459) job for calibration and object detection
 
 ---
 
@@ -40,7 +40,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
    | Sources                                        | Destination                                      |
    |------------------------------------------------|--------------------------------------------------|
    | [wenglorVision.xml](sources/wenglorVision.xml) | `C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\` |
-   | .src and .dat files                            | `C:\KRC\R1\Program\`                             |
+   | .src and .dat files                            | `KRC:\R1\Program\`                             |
 
 3. Follow the [configuration](#configuration) steps.
 4. Run the program [wenglorMain.src](sources/wenglorMain.src) on your robot.
