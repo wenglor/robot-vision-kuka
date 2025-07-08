@@ -34,7 +34,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ## Installation
 
-1. Download the files from the [sources](sources) directory.
+1. Get the files from the [sources](sources) directory.
 2. Copy them to the robot controller.
 
    | Sources                                        | Destination                                      |
@@ -221,6 +221,8 @@ END
 ### Communication Errors
 
 - Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
+- Ensure the robot server on the vision device is active
+  - Go to the device website->Jobs->Processing Instance->Robot Server
 - Check network connectivity/firewall
 
 ### Calibration failed
