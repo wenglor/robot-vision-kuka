@@ -1,0 +1,37 @@
+<ETHERNETKRL>
+	<CONFIGURATION>
+		<EXTERNAL>
+			<IP>192.168.100.1</IP>
+			<PORT>6008</PORT>
+			<TYPE>Server</TYPE>
+		</EXTERNAL>
+		<INTERNAL>
+			<ENVIRONMENT>Program</ENVIRONMENT>
+			<BUFFERING Mode="FIFO"/>
+			<TIMEOUT Connect="60000"/>
+			<ALIVE Set_Flag="1" Ping="200"/>
+			<PROTOCOL>TCP</PROTOCOL>
+			<MESSAGES Logging="error" Display="error"/>
+		</INTERNAL>
+	</CONFIGURATION>
+	<RECEIVE>
+		<XML>
+			<ELEMENT Tag="sensor/reply/command" Type="STRING"/>
+			<ELEMENT Tag="sensor/reply/return_code" Type="INT"/>
+			<ELEMENT Tag="sensor/reply/job_name" Type="STRING"/>
+			<ELEMENT Tag="sensor/reply/state" Type="STRING"/>
+			<ELEMENT Tag="sensor/reply/calib_accuracy" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/num_objects" Type="INT"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@X" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@Y" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@Z" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@RX" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@RY" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/object_pose/@RZ" Type="REAL"/>
+			<ELEMENT Tag="sensor/reply/shape_model" Type="INT"/>
+			<ELEMENT Tag="sensor/reply/additional_value" Type="STRING"/>
+			<ELEMENT Tag="sensor/reply" Set_Flag="42"/>
+		</XML>
+	</RECEIVE>
+	<SEND/>
+</ETHERNETKRL>

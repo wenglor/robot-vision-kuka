@@ -1,0 +1,27 @@
+&ACCESS RV1
+&REL 5
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEFDAT  wenglorUserConfig
+   ;**************************************
+   ;
+   ; Module: wenglorUserConfig
+   ; Author: wenglor sensoric GmbH
+   ; Version: 2.0.0
+   ;
+   ; Description:
+   ;   The file manages all user
+   ;   configurations.
+   ;
+   ;**************************************
+   ;FOLD EXTERNAL DECLARATIONS;%{PE}%MKUKATPBASIS,%CEXT,%VCOMMON,%P
+   ;FOLD BASISTECH EXT;%{PE}%MKUKATPBASIS,%CEXT,%VEXT,%P
+   EXT  BAS (BAS_COMMAND  :IN,REAL  :IN )
+   DECL INT SUCCESS
+   ;ENDFOLD (BASISTECH EXT)
+   ;FOLD USER EXT;%{E}%MKUKATPUSER,%CEXT,%VEXT,%P
+   ;Make your modifications here
+   
+   ;ENDFOLD (USER EXT)
+   ;ENDFOLD (EXTERNAL DECLARATIONS)
+ENDDAT
