@@ -1,13 +1,12 @@
-&ACCESS RVP
-&REL 1
+&ACCESS RVO
+&REL 19
 &PARAM EDITMASK = *
-&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
 DEF wenglorMain( )
    ;**************************************
    ;
    ; Module: wenglorMain
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.0.0
+   ; Version: 2.1.0
    ;
    ; Description:
    ;   This is the main file that manages
@@ -15,17 +14,6 @@ DEF wenglorMain( )
    ;   the robot and the object detection. 
    ;
    ;**************************************
-   DECL CHAR job_name[200]
-   DECL FRAME object_pose
-   DECL INT num_objects
-   DECL INT index
-   DECL INT shape_model
-   DECL CHAR additional_value[100]
-   DECL KrlMsg_T msg
-   DECL KrlMsgPar_T par[3]
-   DECL KrlMsgOpt_T opt
-   DECL KrlMsgDlgSK_T SK[7]
-   INT nHandle, keynumber
    ;FOLD INI;%{PE}
       ;FOLD BASISTECH INI
          GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
@@ -37,86 +25,199 @@ DEF wenglorMain( )
          
       ;ENDFOLD (USER INI)
    ;ENDFOLD (INI)
-   ; init
+   ; Initialization of user configuration
    wenglorUserConfig()
    
-   ; try to connect with wenglor robot server
-   set_up_connection()
+   ; Try to connect to wenglor robot server
+   setUpConnection()
    
-   ; check current state
-   update_sensor_state()
-   IF (g_camera_error) THEN
-      MsgNotify(g_error_msg[])
-      close_connection()
+   ; run singleDetection, multiDetection
+   ; or updateReferenceFrame
+   callUserCommand()
+   
+   ; Close connection with wenglor robot server
+   closeConnection()
+END
+
+DEF callUserCommand()
+   ; Call the desired procedure depending on the user command in the config
+   IF (StrComp(W_USER_COMMAND[], "singleDetection", #NOT_CASE_SENS)) THEN
+      singleDetection()
+   ELSE
+      IF (StrComp(W_USER_COMMAND[], "multiDetection", #NOT_CASE_SENS)) THEN
+         multiDetection()
+      ELSE
+         IF (StrComp(W_USER_COMMAND[], "updateReferenceFrame", #NOT_CASE_SENS)) THEN
+            updateReferenceFrame()
+         ENDIF
+      ENDIF
+   ENDIF
+END
+
+DEF singleDetection()
+   DECL FRAME objectPose
+   DECL INT shapeModel
+   DECL CHAR additionalValue[100]
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
       RETURN
    ENDIF
    
-   ; do only calibrate camera to robot
-   ; if it has not already been done
-   IF (g_calibration_done == FALSE) THEN
-      MsgNotify("No calibration found. Starting calibration now.")
-      calibrate_cam_to_rob()
+   ; Load detect objects job
+   loadJob(W_DETECT_OBJECTS_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect objects pose
+   moveToDetectObjectsPose()
+   
+   ; Get object pose
+   objectPose = detectObjects()
+   shapeModel = readShapeByIndex(0)
+   
+   ; Uncomment readValueByIndex function if you want to use an additional value.
+   ; Ensure the value is linked in the uniVision job.
+   ; additionalValue[] = readValueByIndex(0)
+   
+   ; Here you can add conditional checks for shape or userValue
+   
+   ; Move to object pose
+   moveTo(objectPose)
+END
+
+DEF multiDetection()
+   DECL FRAME objectPose
+   DECL INT numObjects
+   DECL INT index
+   DECL INT shapeModel
+   DECL CHAR additionalValue[100]
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
+      RETURN
+   ENDIF
+   
+   ; Load detect objects job
+   loadJob(W_DETECT_OBJECTS_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect objects pose
+   moveToDetectObjectsPose()
+   
+   ; Get object pose
+   objectPose = detectObjects()
+   numObjects = readNumObjects()
+   FOR index = 0 TO numObjects-1 STEP 1
+      objectPose = readPoseByIndex(index)
+      shapeModel = readShapeByIndex(index)
+	  
+	  ; Uncomment readValueByIndex function if you want to use an additional value.
+      ; Ensure the value is linked in the uniVision job.
+      ; additionalValue[] = readValueByIndex(index)
       
-      msg = {modul[] "wenglorMain", Nr 1, msg_txt[] "Continue with detection?"}
-      SK[1] = {sk_Type #value, sk_txt[] "Yes"}
-      SK[2] = {sk_Type #value, sk_txt[] "No"}
-      nHandle = Set_KrlDlg (msg, par[], SK[], opt)
-      IF (nHandle > 0) THEN
-         WHILE (Exists_KrlDlg(nHandle, keynumber))
-            WAIT SEC 0.1
-         ENDWHILE
-         IF (keynumber == 2) THEN
-            RETURN
+      ; Here you can add conditional checks for shape or userValue
+      
+      moveTo(objectPose)
+      moveToDetectObjectsPose()
+   ENDFOR 
+END
+
+DEF updateReferenceFrame()
+   DECL FRAME targetPose
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
+      RETURN
+   ENDIF
+   
+   ; Load target job
+   loadJob(W_DETECT_TARGET_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect target pose
+   moveToDetectTargetPose()
+   
+   ; Get target pose
+   targetPose = detectTarget()
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; update the reference frame, so position 
+   ; drift of platform can be compensated
+   setBase(W_BASE_NUM, W_BASE_NAME[], targetPose)
+   $BASE = BASE_DATA[W_BASE_NUM]
+   
+   ; Set W_MACHINE_POSES_TAUGHT to TRUE in user config after teaching the poses
+   IF (W_MACHINE_POSES_TAUGHT == FALSE) THEN
+      ; This handles the initial state for the first setup
+      MsgNotify("Reference frame updated. Teach poses relative to the reference frame and set W_MACHINE_POSES_TAUGHT to TRUE.");
+      RETURN
+   ENDIF
+   
+   ; The TurnBit must be set for each pose with the 
+   ; new reference frame. This function must 
+   ; therefore be called before each movement.      
+   ; Replace 'XP1' with the name of the taught pose.
+   ; NOTE: Poses that have been taught are marked 
+   ;       with an 'X' in their names.
+   XP1.T = getTurnBit(XP1)
+   ; Teach the movement and a pose using the new 
+   ; reference frame 
+   ;      
+   
+END
+
+DEFFCT BOOL calibrateIfNeeded()
+   DECL KrlMsg_T msg
+   DECL INT key
+   
+   ; Run calibration if no calibration data is available.
+   ; Check current state
+   updateCameraState()
+   IF (cameraError) THEN
+      MsgNotify(errorMsg[])
+      RETURN FALSE
+   ENDIF
+   
+   IF (wenglorCalibDone == FALSE) THEN
+      MsgNotify("No calibration found, starting calibration procedure.")
+      runCalibration()
+      
+      ; Check current state
+      updateCameraState()
+      IF (cameraError) THEN
+         MsgNotify(errorMsg[])
+         RETURN FALSE
+      ENDIF
+      
+      ; Check if calibration is available
+      IF (wenglorCalibDone == FALSE) THEN
+         MsgNotify("Calibration failed. Aborting program.")
+         RETURN FALSE
+      ELSE
+         ; Validate calibration
+         validateCalibration(W_SAFETY_OFFSET_MM)
+         msg = {modul[] "wenglorMain", Nr 1, msg_txt[] "Calibration successful. Proceed with detection?"}
+         key = showDialog(msg)
+         IF (key == 2) THEN
+            MsgNotify("Aborting program.")
+            RETURN FALSE
          ENDIF
       ENDIF
    ENDIF
    
-   ; check current state
-   update_sensor_state()
-   IF (g_camera_error) THEN
-      MsgNotify(g_error_msg[])
-      close_connection()
-      RETURN
-   ENDIF
-   
-   ; check if calibration is available
-   IF (g_calibration_done == FALSE) THEN
-      MsgNotify("Exit program as calibration failed.")
-      close_connection()
-      RETURN
-   ENDIF
-   
-   ; get current job name
-   job_name[] = read_current_job_name() 
-   
-   ; load detection job
-   call_detection_job()
-   IF (g_camera_error) THEN
-      close_connection()
-      RETURN
-   ENDIF
-   
-   ; move to detection pose
-   detection_pose()
-   
-   ; single / multi object detection and movement
-   object_pose = detect_objects()
-   
-   IF (StrComp(g_detection_case[], "single", #NOT_CASE_SENS)) THEN
-      object_movement(object_pose)
-   ENDIF
-   
-   IF (StrComp(g_detection_case[], "multi", #NOT_CASE_SENS)) THEN
-      num_objects = read_num_objects()
-      FOR index = 0 TO num_objects-1 STEP 1
-         object_pose = read_pose_via_index(index)
-         object_movement(object_pose)
-         shape_model = read_shape_via_index(index)
-         additional_value[] = read_value_via_index(index)
-         detection_pose()
-      ENDFOR 
-   ENDIF
-   
-   ; close connection with wenglor robot server
-   close_connection()
-END
+   RETURN TRUE
+ENDFCT

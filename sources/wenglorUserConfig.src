@@ -1,13 +1,12 @@
-&ACCESS RV1
-&REL 5
+&ACCESS RVO
+&REL 23
 &PARAM EDITMASK = *
-&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
 DEF wenglorUserConfig( )
    ;**************************************
    ;
    ; Module: wenglorUserConfig
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.0.0
+   ; Version: 2.1.0
    ;
    ; Description:
    ;   The file manages all user
@@ -28,50 +27,61 @@ DEF wenglorUserConfig( )
    ;----------------------------------------
    ;----------------------------------------
    ; Name of the xml file  
-   g_connection_name[]="wenglorVision"   
+   W_CONNECTION[] = "wenglorVision"   
    ;----------------------------------------
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected camera/robot setup
-   g_use_case[]="camera_not_on_robot"
-   ;g_use_case[]="camera_on_robot"
+   W_USE_CASE[] = "camera_not_on_robot"
+   ;W_USE_CASE[] = "camera_on_robot"
    ;----------------------------------------
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected calibration board
-   ;g_calib_target[]="zvzj001"
-   ;g_calib_target[]="zvzj002"
-   g_calib_target[]="zvzj003"
-   ;g_calib_target[]="zvzj004"
+   W_CALIBRATION_TARGET[] = "zvzj001"
+   ;W_CALIBRATION_TARGET[] = "zvzj002"
+   ;W_CALIBRATION_TARGET[] = "zvzj003"
+   ;W_CALIBRATION_TARGET[] = "zvzj004"
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Define the uniVision jobs
+   W_CALIBRATION_JOB[] = "calibration.u3p"
+   W_DETECT_OBJECTS_JOB[] = "find_objects.u3p"
+   W_DETECT_TARGET_JOB[] = "find_target.u3p"
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Adjust validation z safety offset [mm]
+   W_SAFETY_OFFSET_MM = 10;
    ;----------------------------------------
    ;----------------------------------------
    ; Adjust the number of calibration poses 
    ; you want to use. 5 poses are required
    ; at least.
-   g_num_calibration_poses = 5
+   W_NUM_CALIBRATION_POSES = 5
    ;----------------------------------------
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected detection
-   g_detection_case[]="single"
-   ;g_detection_case[]="multi"
+   W_USER_COMMAND[] = "singleDetection"
+   ;W_USER_COMMAND[] = "multiDetection"
+   ;W_USER_COMMAND[] = "updateReferenceFrame"
+   ;----------------------------------------
+   ;----------------------------------------
+   ; Mobile Platform use case:
+   ; Adjust W_BASE_NUM and W_BASE_NAME in case of
+   ; using updateReferenceFrame
+   W_BASE_NUM = 10
+   W_BASE_NAME[] = "wReferenceFrame"
+   ; Set to TRUE after teaching the poses 
+   ; with the updated reference frame
+   W_MACHINE_POSES_TAUGHT = FALSE
    ;----------------------------------------
    ;----------------------------------------
 END
 
-GLOBAL DEF call_calibration_job()
-   ; change job name here
-   send_simple_command("job:change[calibration.u3p];")
-END
-
-GLOBAL DEF call_detection_job()
-   ; change job name here
-   send_simple_command("job:change[find_objects.u3p];")
-END
-
-GLOBAL DEF calibration_pose(pose_num:IN)
-   INT pose_num
-   SWITCH pose_num
+GLOBAL DEF moveTocalibrationPose(poseNum:IN)
+   INT poseNum
+   SWITCH poseNum
       CASE 1
          ; Add movement to calibration pose 1 here.
          ;
@@ -92,27 +102,27 @@ GLOBAL DEF calibration_pose(pose_num:IN)
          ; Add movement to calibration pose 5 here.
          ;
          
-      ;------------------------------------
-      ;------------------------------------
-      ; Add more poses by copy "CASE #" and
-      ; increase the pose number e.g.: CASE 6
-      ; Make sure g_num_calibration_poses 
-      ; above has the right value.
-      ;
-      
+         ;------------------------------------
+         ;------------------------------------
+         ; Add more poses by copy "CASE #" and
+         ; increase the pose number e.g.: CASE 6
+         ; Make sure g_num_calibration_poses 
+         ; above has the right value.
+         ;
+         
       DEFAULT
          ; no movement
    ENDSWITCH
    
 END
 
-GLOBAL DEF detection_pose()
-   ; Add movement to detection_pose here.
+GLOBAL DEF moveToDetectObjectsPose()
+   ; Add movement to detectObjectsPose here.
    ;
    
 END
 
-GLOBAL DEF safety_pose()
+GLOBAL DEF moveToSafetyPose()
    ; Add movement to pose here.
    ; use case camera not on robot
    ; for removing calibration board
@@ -120,39 +130,21 @@ GLOBAL DEF safety_pose()
    
 END
 
-GLOBAL DEF validation_movement()
-   DECL FRAME p_valid
-   DECL INT safety_z_offset_mm
-   
-   ; Edit safety offset here
-   safety_z_offset_mm = 5
-   
-   detection_pose()
-   WAIT SEC 1
-   p_valid = get_validation_pose(safety_z_offset_mm)
-   ; Add movement to pose here. Make sure
-   ; that the assignment to the pose is correct.
-   ; Unfold movement section below to ensure
-   ; the movement target is exactly named as
-   ; the p_valid variable above.
-   ; 
+GLOBAL DEF moveToDetectTargetPose()
+   ; Add movement to targetPose here.
+   ;
    
 END
 
-GLOBAL DEF object_movement(p_obj:IN)
-   DECL FRAME p_obj  
-   ; Add movement to pose here. Make sure
-   ; that the assignment to the pose is correct.
-   ; Unfold movement section below to ensure
-   ; the movement target is exactly named as
-   ; the p_obj variable above.
-   ; 
-
+GLOBAL DEF moveTo(pose:IN)
+   DECL FRAME pose
+   $VEL.CP = 0.1
+   LIN pose  
 END
 
-GLOBAL DEF test_calibration_poses()
+GLOBAL DEF testCalibrationPoses()
    INT i
-   FOR i=1 to g_num_calibration_poses
-      calibration_pose(i)
+   FOR i=1 to W_NUM_CALIBRATION_POSES
+      moveTocalibrationPose(i)
    ENDFOR
 END

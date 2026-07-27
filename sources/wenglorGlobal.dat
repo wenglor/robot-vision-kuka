@@ -1,32 +1,37 @@
-&ACCESS RV1
-&REL 1
+&ACCESS RVE
+&REL 19
 &PARAM EDITMASK = *
-&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
 DEFDAT  wenglorGlobal PUBLIC
    ;**************************************
-   ;
+   ; 
    ; Module: wenglorGlobal
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.0.0
-   ;
+   ; Version: 2.1.0
+   ; 
    ; Description:
    ;   The file manages all used functions.
-   ;
+   ; 
    ;**************************************
-   GLOBAL CHAR g_use_case[30]
-   GLOBAL CHAR g_calib_target[20]
-   GLOBAL CHAR g_connection_name[30]
-   GLOBAL INT g_num_calibration_poses
-   GLOBAL CHAR g_detection_case[100]
+   GLOBAL CHAR W_CONNECTION[30]
+   GLOBAL CHAR W_USE_CASE[30]
+   GLOBAL CHAR W_CALIBRATION_TARGET[20]
+   GLOBAL CHAR W_CALIBRATION_JOB[200]
+   GLOBAL CHAR W_DETECT_OBJECTS_JOB[200]
+   GLOBAL CHAR W_DETECT_TARGET_JOB[200]
+   GLOBAL INT W_SAFETY_OFFSET_MM
+   GLOBAL INT W_NUM_CALIBRATION_POSES
+   GLOBAL CHAR W_USER_COMMAND[100]
+   GLOBAL BOOL W_MACHINE_POSES_TAUGHT=FALSE
+   GLOBAL INT W_BASE_NUM
+   GLOBAL CHAR W_BASE_NAME[24]
    
    GLOBAL CONST REAL M_PI=3.14159274
    GLOBAL STRUC ROT_VEC REAL x,REAL y,REAL z
-   GLOBAL STRUC ROT_MAT REAL m_1_1,REAL m_1_2,REAL m_1_3,REAL m_2_1,REAL m_2_2,REAL m_2_3,REAL m_3_1,REAL m_3_2,REAL m_3_3
-   GLOBAL STRUC OBJECT_INFO INT shape_model,FRAME object_pose,CHAR additional_value[200]
+   GLOBAL STRUC ROT_MAT REAL m11,REAL m12,REAL m13,REAL m21,REAL m22,REAL m23,REAL m31,REAL m32,REAL m33
    
-   DECL EKI_STATUS g_eki_status
-   GLOBAL CHAR g_error_msg[100]
-   GLOBAL BOOL g_camera_error=FALSE
-   GLOBAL BOOL g_calibration_done=FALSE
+   DECL EKI_STATUS W_EKI_STATUS
+   GLOBAL CHAR errorMsg[100]
+   GLOBAL BOOL cameraError=FALSE
+   GLOBAL BOOL wenglorCalibDone=TRUE
    
 ENDDAT
