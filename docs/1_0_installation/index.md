@@ -13,7 +13,7 @@ The socket communication uses the **EthernetKRL (EKI)** technology package, whic
 
 ## Files
 
-Download the robot example from [www.wenglor.com/product/DNNF023](https://www.wenglor.com/product/DNNF023) → Downloads → Programming examples and configuration files → Examples_Robot_Vision. It consists of:
+Get the robot example from this repository's [`sources`](https://github.com/wenglor/robot-vision-kuka/tree/main/sources) directory. It consists of:
 
 - `wenglorUserConfig.src` / `.dat` — user configuration (use case, poses, jobs) and the pose movement procedures. See [User Configuration](../2_0_user_configuration/index.md).
 - `wenglorGlobal.src` / `.dat` — core and helper functions (EKI socket communication, unit and rotation conversions, error handling).
@@ -33,7 +33,7 @@ Then copy `wenglorVision.xml` to the following location on the robot controller:
 C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\
 ```
 
-<img src="images/01_ethernetkrl_config.png" alt="wenglorVision.xml in the EthernetKRL config folder" class="big"/>
+<img src="images/01_ethernetkrl_config.png" alt="wenglorVision.xml in the EthernetKRL config folder" class="uniform-width-800"/>
 
 > NOTE
 >
@@ -45,10 +45,8 @@ Copy the `wenglorGlobal`, `wenglorMain` and `wenglorUserConfig` module files (`.
 
 > NOTE
 >
-> On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_2_0_settings_on_device_website/) in the wenglor robot vision manual.
+> On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Running the program
 
 After updating the [user configuration](../2_0_user_configuration/index.md) to match your setup and teaching the poses, run `wenglorMain.src` to start the calibration and the detection.
-
-<img src="images/02_load_program.png" alt="Run wenglorMain.src on the smartPAD" class="medium"/>

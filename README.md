@@ -2,7 +2,7 @@
 
 **Version:** 2.1.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor vision devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
 
 > NOTE
 >
@@ -14,17 +14,17 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Installation](#installation)
-3. [Running the Sample Program](#running-the-sample-program)
-4. [Configuration](#configuration)
-   1. [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
-   2. [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
-   3. [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
-5. [Troubleshooting](#troubleshooting)
-   1. [Communication errors](#communication-errors)
-   2. [Calibration failed](#calibration-failed)
-6. [Support & Feedback](#support--feedback)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Running the Sample Program](#running-the-sample-program)
+- [Configuration](#configuration)
+  - [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
+  - [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
+  - [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
+- [Troubleshooting](#troubleshooting)
+  - [Communication Errors](#communication-errors)
+  - [Calibration failed](#calibration-failed)
+- [Support & Feedback](#support--feedback)
 
 ---
 
@@ -67,8 +67,8 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ```xml
 <EXTERNAL>
-    <IP>192.168.100.1</IP> <!-- IP address of the vision device -->
-    <PORT>6008</PORT>      <!-- Port of the robot vision server on the vision device -->
+    <IP>192.168.100.1</IP> <!-- IP address of the Machine Vision Device -->
+    <PORT>6008</PORT>      <!-- Port of the robot vision server on the Machine Vision Device -->
     <TYPE>Server</TYPE>
 </EXTERNAL>
 ```
@@ -191,13 +191,15 @@ END
 
 </details>
 
+---
+
 ## Troubleshooting
 
 ### Communication Errors
 
 - Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
-- Ensure the robot server on the vision device is active
-  - Go to the device website->Jobs->Processing Instance->Robot Server
+- Ensure the robot server on the Machine Vision Device is active
+  - Go to the device website → Jobs → Processing Instance → Robot Server
 - Check network connectivity/firewall
 
 ### Calibration failed
@@ -209,5 +211,5 @@ END
 
 ## Support & Feedback
 
-- **Bugs:** Please open a new Issue in the [GitHub Issues section](../../issues) if needed
-- **Feature Requests & Ideas:** Discuss suggestions in the Discussions → Ideas category under [GitHub Discussions](../../discussions)
+- **Bugs:** Please open a new Issue in the [GitHub Issues section](../../issues) if needed.
+- **Feature Requests & Ideas:** Discuss suggestions in the Discussions → Ideas category under [GitHub Discussions](../../discussions).

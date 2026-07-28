@@ -2,7 +2,7 @@
 
 All parameters you need to adapt to your setup are located in the `wenglorUserConfig` module. Adjust them according to your needs before running the program.
 
-<img src="images/01_user_config_module.png" alt="wenglorUserConfig.src parameters" class="big"/>
+<img src="images/01_user_config_module.png" alt="wenglorUserConfig.src parameters" class="uniform-width-800"/>
 
 ## Parameters
 
@@ -25,54 +25,8 @@ Edit the following parameters in `wenglorUserConfig.src`:
 
 ## Mobile platform use case
 
-For the mobile platform use case (`updateReferenceFrame`), also set:
+For the mobile platform use case (`updateReferenceFrame`), also set `W_BASE_NUM`, `W_BASE_NAME[]`, and `W_MACHINE_POSES_TAUGHT` as described in the table above. For the general concept, see [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
 
-- `W_BASE_NUM` and `W_BASE_NAME[]` — the base that is updated to compensate the positional drift of the platform.
-- `W_MACHINE_POSES_TAUGHT` — set to `TRUE` after teaching the poses relative to the reference frame.
-
-For the general concept, see [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
-
-## Example
-
-```text
-;----------------------------------------
-; Name of the xml file
-W_CONNECTION[] = "wenglorVision"
-;----------------------------------------
-; Comment out the correct line depending
-; on the selected camera/robot setup
-W_USE_CASE[] = "camera_not_on_robot"
-;W_USE_CASE[] = "camera_on_robot"
-;----------------------------------------
-; Comment out the correct line depending
-; on the selected calibration board
-W_CALIBRATION_TARGET[] = "zvzj001"
-;W_CALIBRATION_TARGET[] = "zvzj002"
-;W_CALIBRATION_TARGET[] = "zvzj003"
-;W_CALIBRATION_TARGET[] = "zvzj004"
-;----------------------------------------
-; Define the uniVision jobs
-W_CALIBRATION_JOB[] = "calibration.u3p"
-W_DETECT_OBJECTS_JOB[] = "find_objects.u3p"
-W_DETECT_TARGET_JOB[] = "find_target.u3p"
-;----------------------------------------
-; Adjust validation z safety offset [mm]
-W_SAFETY_OFFSET_MM = 10
-;----------------------------------------
-; Number of calibration poses (min. 5)
-W_NUM_CALIBRATION_POSES = 5
-;----------------------------------------
-; Comment out the correct line depending
-; on the selected detection
-W_USER_COMMAND[] = "singleDetection"
-;W_USER_COMMAND[] = "multiDetection"
-;W_USER_COMMAND[] = "updateReferenceFrame"
-;----------------------------------------
-; Mobile Platform use case
-W_BASE_NUM = 10
-W_BASE_NAME[] = "wReferenceFrame"
-W_MACHINE_POSES_TAUGHT = FALSE
-```
 
 ## Teaching the poses
 
@@ -85,10 +39,25 @@ The movements to the robot poses are defined in the pose procedures of `wenglorU
 | `moveToSafetyPose()` | Moves to a safety pose so the operator can remove the calibration plate (`camera_not_on_robot` only). |
 | `moveToDetectTargetPose()` | Moves to the pose from which the calibration target is detected (`updateReferenceFrame` only). |
 
-<img src="images/02_calibration_poses.png" alt="Calibration poses in moveTocalibrationPose()" class="medium"/>
 
-For details on how to teach the poses, see [Robot Program](../3_0_robot_program/index.md).
+Teach a minimum of five calibration poses (more can be added for better accuracy) in `moveTocalibrationPose()`.
+
+<img src="images/02_teach_calibration_poses.png" alt="Teach the calibration poses" class="uniform-width-800"/>
 
 > NOTE
 >
-> Also check that **KUKA** is selected in the robot manufacturer drop-down of the robot server on the Machine Vision Device website (e.g. B60, MVC). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_2_0_settings_on_device_website/) in the wenglor robot vision manual.
+> The number of taught poses must match `W_NUM_CALIBRATION_POSES`. To add poses, copy a `CASE` block in `moveTocalibrationPose()`, increase the pose number, and update `W_NUM_CALIBRATION_POSES` accordingly.
+
+For the detection pose (`moveToDetectObjectsPose()`), the safety pose (`moveToSafetyPose()`, `camera_not_on_robot` only), and the target pose (`moveToDetectTargetPose()`, `updateReferenceFrame` only):
+
+<img src="images/03_teach_detection_poses.png" alt="Teach detection, safety and target poses" class="uniform-width-600"/>
+
+To test the calibration poses you can call the function testCalibratonPoses. Must to be called in wenglorMain.src.
+
+<img src="images/04_test_calibration_poses.png" alt="Test the calibration poses" class="uniform-width-600"/>
+
+For details on how these poses are used in the calibration and detection flow, see [Robot Program](../3_0_robot_program/index.md).
+
+> NOTE
+>
+> Also check that **KUKA** is selected in the robot manufacturer drop-down of the robot server on the Machine Vision Device website (e.g. B60, MVC). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.

@@ -2,8 +2,6 @@
 
 The example program implements a complete robot vision workflow: calibrating the camera to the robot, detecting objects, and moving to them. It is split into several KRL modules.
 
-<img src="images/01_program_modules_overview.png" alt="KUKA program modules overview" class="big"/>
-
 ## Modules
 
 | Module | Responsibility |
@@ -70,21 +68,21 @@ The calibration process differs depending on whether the camera is mounted on th
 
 > NOTE
 >
-> For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual. The description here does not repeat them.
+> For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. The description here does not repeat them.
 
-Teach a minimum of five calibration poses (more can be added for better accuracy). The movements are defined in `moveTocalibrationPose()` in `wenglorUserConfig.src`; `runCalibration()` in `wenglorGlobal` iterates through them and calls `calibration:add` at each pose.
-
-<img src="images/02_teach_calibration_poses.png" alt="Teach the calibration poses" class="big"/>
-
-> NOTE
->
-> The number of taught poses must match `W_NUM_CALIBRATION_POSES` in the [user configuration](../2_0_user_configuration/index.md). To add poses, copy a `CASE` block in `moveTocalibrationPose()`, increase the pose number, and update `W_NUM_CALIBRATION_POSES` accordingly.
+The movements are defined in `moveTocalibrationPose()` in `wenglorUserConfig.src`; `runCalibration()` in `wenglorGlobal` iterates through them and calls `calibration:add` at each pose.
 
 You can verify your calibration movements without running the full program by calling the `testCalibrationPoses()` routine, which moves through all defined calibration poses.
 
+| | Camera on robot | Camera not on robot |
+| --- | --- | --- |
+| Calibration poses | Move through the calibration poses with the calibration plate fixed in the workspace. | Move through the calibration poses with the calibration plate mounted on the robot. |
+| Extra step | None. | Move to the safety pose (`moveToSafetyPose()`) so the operator can remove the plate and place it on the measuring/picking plane; the camera-to-ground relation is then calibrated (`calibration:ground`). |
+| Detection pose | Identical to the first calibration pose. | Taught separately in `moveToDetectObjectsPose()`, chosen so the robot arm does not block the camera image. |
+
 ### Camera on robot
 
-Teach the calibration poses. The **detection pose is identical to the first calibration pose** — choose a pose from which the objects can be reached safely. Teach the detection movement in `moveToDetectObjectsPose()`.
+The **detection pose is identical to the first calibration pose** — choose a pose from which the objects can be reached safely.
 
 ### Camera not on robot
 
@@ -93,17 +91,15 @@ The calibration consists of two steps:
 1. Mount the calibration plate on the robot and move through the calibration poses.
 2. The robot moves to the safety pose (`moveToSafetyPose()`) so the operator can remove the calibration plate and place it on the measuring/picking plane; the camera-to-ground relation is then calibrated (`calibration:ground`).
 
-Teach the detection pose (`moveToDetectObjectsPose()`) so that the robot arm does not interfere with the camera image.
+The robot program requires small adjustments depending on your setup — see [User Configuration → Teaching the poses](../2_0_user_configuration/index.md#teaching-the-poses) to teach the calibration, detection, safety, and target poses.
 
 ### Verification
 
 After calibration, `validateCalibration()` performs a verification step: it moves the robot TCP to the position reported by the camera, offset upward by `W_SAFETY_OFFSET_MM`, so the operator can visually confirm accuracy. The calibration plate must not be moved between calibration and verification.
 
-<img src="images/03_teach_detection_poses.png" alt="Teach detection, safety and target poses" class="medium"/>
-
 > NOTE
 >
-> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
+> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ## Detection
 
