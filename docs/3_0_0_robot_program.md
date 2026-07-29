@@ -1,4 +1,4 @@
-# Robot Program
+# 3. Robot Program
 
 The example program implements a complete robot vision workflow: calibrating the camera to the robot, detecting objects, and moving to them. It is split into several KRL modules.
 
@@ -6,7 +6,7 @@ The example program implements a complete robot vision workflow: calibrating the
 
 | Module | Responsibility |
 | --- | --- |
-| `wenglorUserConfig` | All user-adjustable parameters and the pose movement procedures. See [User Configuration](../2_0_user_configuration/index.md). |
+| `wenglorUserConfig` | All user-adjustable parameters and the pose movement procedures. See [User Configuration](2_0_0_user_configuration.md). |
 | `wenglorGlobal` | EKI socket communication, unit (mm ↔ m) and rotation (Euler ↔ rotation-vector) conversions, error handling. |
 | `wenglorMain` | Program entry point. Sets up the connection, runs the selected user command, and closes the connection. Contains the `main` routine. |
 
@@ -66,9 +66,9 @@ Each routine first calls `calibrateIfNeeded()`, which runs a calibration if no c
 
 The calibration process differs depending on whether the camera is mounted on the robot or not. The sections below describe only how the **KUKA example** performs each case.
 
-> NOTE
->
-> For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. The description here does not repeat them.
+!!! note
+
+    For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. The description here does not repeat them.
 
 The movements are defined in `moveTocalibrationPose()` in `wenglorUserConfig.src`; `runCalibration()` in `wenglorGlobal` iterates through them and calls `calibration:add` at each pose.
 
@@ -91,15 +91,15 @@ The calibration consists of two steps:
 1. Mount the calibration plate on the robot and move through the calibration poses.
 2. The robot moves to the safety pose (`moveToSafetyPose()`) so the operator can remove the calibration plate and place it on the measuring/picking plane; the camera-to-ground relation is then calibrated (`calibration:ground`).
 
-The robot program requires small adjustments depending on your setup — see [User Configuration → Teaching the poses](../2_0_user_configuration/index.md#teaching-the-poses) to teach the calibration, detection, safety, and target poses.
+The robot program requires small adjustments depending on your setup — see [User Configuration → Teaching the poses](2_0_0_user_configuration.md#teaching-the-poses) to teach the calibration, detection, safety, and target poses.
 
 ### Verification
 
 After calibration, `validateCalibration()` performs a verification step: it moves the robot TCP to the position reported by the camera, offset upward by `W_SAFETY_OFFSET_MM`, so the operator can visually confirm accuracy. The calibration plate must not be moved between calibration and verification.
 
-> NOTE
->
-> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
+!!! note
+
+    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ## Detection
 
@@ -157,15 +157,15 @@ ENDIF
 XP1.T = getTurnBit(XP1)
 ```
 
-On the first run, teach the poses relative to the reference frame, then set `W_MACHINE_POSES_TAUGHT` to `TRUE` in the [user configuration](../2_0_user_configuration/index.md) and restart.
+On the first run, teach the poses relative to the reference frame, then set `W_MACHINE_POSES_TAUGHT` to `TRUE` in the [user configuration](2_0_0_user_configuration.md) and restart.
 
-> NOTE
->
-> The turn bit (status/turn) must be set for each pose that uses the updated reference frame. Call `getTurnBit()` for the pose before moving to it. Taught poses are marked with an `X` in their names (e.g. `XP1`).
+!!! note
 
-> NOTE
->
-> `wenglorGlobal` also provides `calibrateToTarget()`, which sends the `calibration:target` command (camera-to-target calibration cached only in the device buffer, without writing a new calibration file). It is not called by the example program but is available for custom use — see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
+    The turn bit (status/turn) must be set for each pose that uses the updated reference frame. Call `getTurnBit()` for the pose before moving to it. Taught poses are marked with an `X` in their names (e.g. `XP1`).
+
+!!! note
+
+    `wenglorGlobal` also provides `calibrateToTarget()`, which sends the `calibration:target` command (camera-to-target calibration cached only in the device buffer, without writing a new calibration file). It is not called by the example program but is available for custom use — see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
 
 ## Units and conventions
 

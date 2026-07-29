@@ -1,4 +1,4 @@
-# User Configuration
+# 2. User Configuration
 
 All parameters you need to adapt to your setup are located in the `wenglorUserConfig` module. Adjust them according to your needs before running the program.
 
@@ -21,7 +21,7 @@ Edit the following parameters in `wenglorUserConfig.src`:
 | `W_USER_COMMAND[]` | The routine to execute (`singleDetection`, `multiDetection`, or `updateReferenceFrame`). |
 | `W_BASE_NUM` | Base number used for the reference frame in the `updateReferenceFrame` use case. |
 | `W_BASE_NAME[]` | Name of the reference frame base (`wReferenceFrame` by default). |
-| `W_MACHINE_POSES_TAUGHT` | Set to `TRUE` after teaching the poses relative to the reference frame in the `updateReferenceFrame` use case. See [Robot Program → `updateReferenceFrame`](../3_0_robot_program/index.md#updatereferenceframe). |
+| `W_MACHINE_POSES_TAUGHT` | Set to `TRUE` after teaching the poses relative to the reference frame in the `updateReferenceFrame` use case. See [Robot Program → `updateReferenceFrame`](3_0_0_robot_program.md#updatereferenceframe). |
 
 ## Mobile platform use case
 
@@ -44,20 +44,20 @@ Teach a minimum of five calibration poses (more can be added for better accuracy
 
 <img src="images/02_teach_calibration_poses.png" alt="Teach the calibration poses" class="uniform-width-800"/>
 
-> NOTE
->
-> The number of taught poses must match `W_NUM_CALIBRATION_POSES`. To add poses, copy a `CASE` block in `moveTocalibrationPose()`, increase the pose number, and update `W_NUM_CALIBRATION_POSES` accordingly.
+!!! note
+
+    The number of taught poses must match `W_NUM_CALIBRATION_POSES`. To add poses, copy a `CASE` block in `moveTocalibrationPose()`, increase the pose number, and update `W_NUM_CALIBRATION_POSES` accordingly.
 
 For the detection pose (`moveToDetectObjectsPose()`), the safety pose (`moveToSafetyPose()`, `camera_not_on_robot` only), and the target pose (`moveToDetectTargetPose()`, `updateReferenceFrame` only):
 
 <img src="images/03_teach_detection_poses.png" alt="Teach detection, safety and target poses" class="uniform-width-600"/>
 
-To test the calibration poses you can call the function testCalibratonPoses. Must to be called in wenglorMain.src.
+To test the calibration poses you can call the function testCalibrationPoses. Must to be called in wenglorMain.src.
 
 <img src="images/04_test_calibration_poses.png" alt="Test the calibration poses" class="uniform-width-600"/>
 
-For details on how these poses are used in the calibration and detection flow, see [Robot Program](../3_0_robot_program/index.md).
+For details on how these poses are used in the calibration and detection flow, see [Robot Program](3_0_0_robot_program.md).
 
-> NOTE
->
-> Also check that **KUKA** is selected in the robot manufacturer drop-down of the robot server on the Machine Vision Device website (e.g. B60, MVC). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
+!!! note
+
+    Also check that **KUKA** is selected in the robot manufacturer drop-down of the robot server on the Machine Vision Device website (e.g. B60, MVC). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.

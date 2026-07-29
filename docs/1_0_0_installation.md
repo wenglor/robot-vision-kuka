@@ -1,4 +1,4 @@
-# Installation & Setup
+# 1. Installation & Setup
 
 The KUKA robot vision example is a set of KRL modules (`.src` / `.dat`) together with an EthernetKRL configuration file (`.xml`). Before running the program, copy the files to the robot controller and configure the network connection to the Machine Vision Device.
 
@@ -15,7 +15,7 @@ The socket communication uses the **EthernetKRL (EKI)** technology package, whic
 
 Get the robot example from this repository's [`sources`](https://github.com/wenglor/robot-vision-kuka/tree/main/sources) directory. It consists of:
 
-- `wenglorUserConfig.src` / `.dat` — user configuration (use case, poses, jobs) and the pose movement procedures. See [User Configuration](../2_0_user_configuration/index.md).
+- `wenglorUserConfig.src` / `.dat` — user configuration (use case, poses, jobs) and the pose movement procedures. See [User Configuration](2_0_0_user_configuration.md).
 - `wenglorGlobal.src` / `.dat` — core and helper functions (EKI socket communication, unit and rotation conversions, error handling).
 - `wenglorMain.src` / `.dat` — program entry point: connects, runs the selected user command, and closes the connection.
 - `wenglorVision.xml` — EthernetKRL channel configuration (IP address and port of the robot server).
@@ -35,18 +35,18 @@ C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\
 
 <img src="images/01_ethernetkrl_config.png" alt="wenglorVision.xml in the EthernetKRL config folder" class="uniform-width-800"/>
 
-> NOTE
->
-> The name `wenglorVision` used at `W_CONNECTION[]` in `wenglorUserConfig.src` must match the name of the XML file. By default it fits automatically — do not rename it.
+!!! note
+
+    The name `wenglorVision` used at `W_CONNECTION[]` in `wenglorUserConfig.src` must match the name of the XML file. By default it fits automatically — do not rename it.
 
 ## Copy the program to the controller
 
 Copy the `wenglorGlobal`, `wenglorMain` and `wenglorUserConfig` module files (`.src` and `.dat`) to the robot controller, for example under `KRC:\R1\Program`.
 
-> NOTE
->
-> On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
+!!! note
+
+    On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Running the program
 
-After updating the [user configuration](../2_0_user_configuration/index.md) to match your setup and teaching the poses, run `wenglorMain.src` to start the calibration and the detection.
+After updating the [user configuration](2_0_0_user_configuration.md) to match your setup and teaching the poses, run `wenglorMain.src` to start the calibration and the detection.
