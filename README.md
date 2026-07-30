@@ -1,24 +1,30 @@
 # Example KUKA KRL program files for the generic vision interface
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor vision devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
+
+> NOTE
+>
+> This repository focuses exclusively on KUKA Robots-specific topics. For general robot vision information, please refer to the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/).
+
+📖 **Full documentation** is available in the [online manual](https://wenglor.github.io/robot-vision-kuka/)
 
 ---
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Installation](#installation)
-3. [Running the Sample Program](#running-the-sample-program)
-4. [Configuration](#configuration)
-   1. [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
-   2. [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
-   3. [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
-5. [Troubleshooting](#troubleshooting)
-   1. [Communication errors](#communication-errors)
-   2. [Calibration failed](#calibration-failed)
-6. [Support & Feedback](#support--feedback)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Running the Sample Program](#running-the-sample-program)
+- [Configuration](#configuration)
+  - [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
+  - [Adjusting Parameters (`wenglorUserConfig.src`)](#adjusting-parameters-wengloruserconfigsrc)
+  - [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
+- [Troubleshooting](#troubleshooting)
+  - [Communication Errors](#communication-errors)
+  - [Calibration failed](#calibration-failed)
+- [Support & Feedback](#support--feedback)
 
 ---
 
@@ -61,58 +67,52 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ```xml
 <EXTERNAL>
-    <IP>192.168.100.1</IP> <!-- IP address of the vision device -->
-    <PORT>6008</PORT>      <!-- Port of the robot vision server on the vision device -->
+    <IP>192.168.100.1</IP> <!-- IP address of the Machine Vision Device -->
+    <PORT>6008</PORT>      <!-- Port of the robot vision server on the Machine Vision Device -->
     <TYPE>Server</TYPE>
 </EXTERNAL>
 ```
 
-### Adjusting Parameter (`wenglorUserConfig.src`)
+### Adjusting Parameters (`wenglorUserConfig.src`)
 
 <details>
    <summary>Click to see the relevant parameter adjustments in the wenglorUserConfig.src file </summary>
 
 ```src
-;----------------------------------------
-   ; Name of the xml file
-   g_connection_name[]="wenglorVision"
    ;----------------------------------------
+   ; Name of the xml file
+   W_CONNECTION[] = "wenglorVision"
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected camera/robot setup
-   g_use_case[]="camera_not_on_robot"
-   ;g_use_case[]="camera_on_robot"              <!-- If your camera is mounted on the robot, pick this case. -->
-   ;----------------------------------------
+   W_USE_CASE[] = "camera_not_on_robot"
+   ;W_USE_CASE[] = "camera_on_robot"              <!-- If your camera is mounted on the robot, pick this case. -->
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected calibration board
-   ;g_calib_target[]="zvzj001"
-   ;g_calib_target[]="zvzj002"
-   g_calib_target[]="zvzj003"                   <!-- Pick the calibration board you are using. -->
-   ;g_calib_target[]="zvzj004"
+   W_CALIBRATION_TARGET[] = "zvzj001"             <!-- Pick the calibration board you are using. -->
+   ;W_CALIBRATION_TARGET[] = "zvzj002"
+   ;W_CALIBRATION_TARGET[] = "zvzj003"
+   ;W_CALIBRATION_TARGET[] = "zvzj004"
    ;----------------------------------------
+   ; Define the uniVision jobs
+   W_CALIBRATION_JOB[] = "calibration.u3p"        <!-- Update to your calibration job name. -->
+   W_DETECT_OBJECTS_JOB[] = "find_objects.u3p"    <!-- Update to your detection job name. -->
+   W_DETECT_TARGET_JOB[] = "find_target.u3p"
+   ;----------------------------------------
+   ; Adjust validation z safety offset [mm]
+   W_SAFETY_OFFSET_MM = 10
    ;----------------------------------------
    ; Adjust the number of calibration poses
    ; you want to use. 5 poses are required
    ; at least.
-   g_num_calibration_poses = 5                  <!-- How many calibration poses do you want to use? Minimum is 5. -->
-   ;----------------------------------------
+   W_NUM_CALIBRATION_POSES = 5                    <!-- How many calibration poses do you want to use? Minimum is 5. -->
    ;----------------------------------------
    ; Comment out the correct line depending
    ; on the selected detection
-   g_detection_case[]="single"
-   ;g_detection_case[]="multi"                  <!-- Want to detect multiple objects with one capture? Then pick this one. -->
-   ;----------------------------------------
-
-   GLOBAL DEF call_calibration_job()
-      ; change job name here
-      send_simple_command("job:change[calibration.u3p];")      <!-- Update to your calibration job name. -->
-   END
-
-   GLOBAL DEF call_detection_job()
-      ; change job name here
-      send_simple_command("job:change[find_objects.u3p];")     <!-- Update to your detection job name. -->
-   END
+   W_USER_COMMAND[] = "singleDetection"
+   ;W_USER_COMMAND[] = "multiDetection"           <!-- Want to detect multiple objects with one capture? Then pick this one. -->
+   ;W_USER_COMMAND[] = "updateReferenceFrame"
 ```
 
 </details>
@@ -125,9 +125,9 @@ If you taught more than 5 poses remember to update the number of calibration pos
    <summary>Click to see where to set the poses in the wenglorUserConfig.src file </summary>
 
 ```src
-GLOBAL DEF calibration_pose(pose_num:IN)
-   INT pose_num
-   SWITCH pose_num
+GLOBAL DEF moveTocalibrationPose(poseNum:IN)
+   INT poseNum
+   SWITCH poseNum
       CASE 1
          ; Add movement to calibration pose 1 here.
          ;
@@ -148,13 +148,12 @@ GLOBAL DEF calibration_pose(pose_num:IN)
          ; Add movement to calibration pose 5 here.
          ;
                                                    <!-- Teach pose here. -->
-      ;------------------------------------
-      ;------------------------------------
-      ; Add more poses by copy "CASE #" and
-      ; increase the pose number e.g.: CASE 6
-      ; Make sure g_num_calibration_poses
-      ; above has the right value.
-      ;
+         ;------------------------------------
+         ; Add more poses by copy "CASE #" and
+         ; increase the pose number e.g.: CASE 6
+         ; Make sure W_NUM_CALIBRATION_POSES
+         ; above has the right value.
+         ;
                                                    <!-- Teach further poses here to increase accuracy. -->
       DEFAULT
          ; no movement
@@ -162,13 +161,13 @@ GLOBAL DEF calibration_pose(pose_num:IN)
 
 END
 
-GLOBAL DEF detection_pose()
-   ; Add movement to detection_pose here.
+GLOBAL DEF moveToDetectObjectsPose()
+   ; Add movement to detectObjectsPose here.
    ;
                                                    <!-- Teach detection pose here. -->
 END
 
-GLOBAL DEF safety_pose()
+GLOBAL DEF moveToSafetyPose()
    ; Add movement to pose here.
    ; use case camera not on robot
    ; for removing calibration board
@@ -176,63 +175,41 @@ GLOBAL DEF safety_pose()
                                                    <!-- Teach safety pose here. -->
 END
 
-GLOBAL DEF validation_movement()
-   DECL FRAME p_valid
-   DECL INT safety_z_offset_mm
-
-   ; Edit safety offset here
-   safety_z_offset_mm = 5                          <!-- Update safety offset for validation movement. -->
-
-   detection_pose()
-   WAIT SEC 1
-   p_valid = get_validation_pose(safety_z_offset_mm)
-   ; Add movement to pose here. Make sure
-   ; that the assignment to the pose is correct.
-   ; Unfold movement section below to ensure
-   ; the movement target is exactly named as
-   ; the p_valid variable above.
+GLOBAL DEF moveToDetectTargetPose()
+   ; Add movement to targetPose here.
    ;
-                                                   <!-- Add movement to validation pose with name p_valid here. -->
+                                                   <!-- Teach detect target pose here (updateReferenceFrame). -->
 END
 
-GLOBAL DEF object_movement(p_obj:IN)
-   DECL FRAME p_obj
-   ; Add movement to pose here. Make sure
-   ; that the assignment to the pose is correct.
-   ; Unfold movement section below to ensure
-   ; the movement target is exactly named as
-   ; the p_obj variable above.
-   ;
-                                                   <!-- Add movement to object pose with name p_obj here. -->
-END
-
-GLOBAL DEF test_calibration_poses()                <!-- Add to wenglorMain.src to test your calibration pose movements -->
+GLOBAL DEF testCalibrationPoses()                  <!-- Call from wenglorMain.src to test your calibration pose movements -->
    INT i
-   FOR i=1 to g_num_calibration_poses
-      calibration_pose(i)
+   FOR i=1 to W_NUM_CALIBRATION_POSES
+      moveTocalibrationPose(i)
    ENDFOR
 END
 ```
 
 </details>
 
+---
+
 ## Troubleshooting
 
 ### Communication Errors
 
 - Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
-- Ensure the robot server on the vision device is active
-  - Go to the device website->Jobs->Processing Instance->Robot Server
+- Ensure the robot server on the Machine Vision Device is active
+  - Go to the device website → Jobs → Processing Instance → Robot Server
 - Check network connectivity/firewall
 
 ### Calibration failed
 
-- Ensure your taught number of calibration poses equals *g_num_calibration_poses*
-- Match *g_connection_name* with XML filename
+- Ensure your taught number of calibration poses equals *W_NUM_CALIBRATION_POSES*
+- Match *W_CONNECTION[]* with the XML filename
 
 ---
 
 ## Support & Feedback
 
-- **Bugs:** Please open a new Issue in the [GitHub Issues section](../../issues) if needed
-- **Feature Requests & Ideas:** Discuss suggestions in the Discussions → Ideas category under [GitHub Discussions](../../discussions)
+- **Bugs:** Please open a new Issue in the [GitHub Issues section](../../issues) if needed.
+- **Feature Requests & Ideas:** Discuss suggestions in the Discussions → Ideas category under [GitHub Discussions](../../discussions).
