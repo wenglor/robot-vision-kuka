@@ -19,7 +19,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 - [Running the Sample Program](#running-the-sample-program)
 - [Configuration](#configuration)
   - [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
-  - [Adjusting Parameter (`wenglorUserConfig.src`)](#adjusting-parameter-wengloruserconfigsrc)
+  - [Adjusting Parameters (`wenglorUserConfig.src`)](#adjusting-parameters-wengloruserconfigsrc)
   - [Teaching Poses and Defining Movements (`wenglorUserConfig.src`)](#teaching-poses-and-defining-movements-wengloruserconfigsrc)
 - [Troubleshooting](#troubleshooting)
   - [Communication Errors](#communication-errors)
@@ -73,7 +73,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 </EXTERNAL>
 ```
 
-### Adjusting Parameter (`wenglorUserConfig.src`)
+### Adjusting Parameters (`wenglorUserConfig.src`)
 
 <details>
    <summary>Click to see the relevant parameter adjustments in the wenglorUserConfig.src file </summary>

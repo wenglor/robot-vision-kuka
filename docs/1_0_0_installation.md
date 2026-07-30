@@ -37,7 +37,7 @@ C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\
 
 !!! note
 
-    The name `wenglorVision` used at `W_CONNECTION[]` in `wenglorUserConfig.src` must match the name of the XML file. By default it fits automatically — do not rename it.
+    The name `wenglorVision` used at `W_CONNECTION[]` in `wenglorUserConfig.src` must match the name of the XML file. By default, the names already match — do not rename it.
 
 ## Copy the program to the controller
 
@@ -45,7 +45,7 @@ Copy the `wenglorGlobal`, `wenglorMain` and `wenglorUserConfig` module files (`.
 
 !!! note
 
-    On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
+    On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **KUKA**. See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Running the program
 

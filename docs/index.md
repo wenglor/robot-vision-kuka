@@ -8,12 +8,16 @@ This repository contains an example KRL program to set up and start the generic 
 
 The robot vision example for KUKA consists of the following files, available in this repository's [`sources`](https://github.com/wenglor/robot-vision-kuka/tree/main/sources) directory:
 
+/// html | div.col-widths
+    attrs: {style: "--w1: 31%; --w2: 69%;"}
+
 | File | Description |
 | --- | --- |
 | `wenglorUserConfig.src` / `.dat` | User configuration (use case, poses, jobs) and the pose movement procedures. |
 | `wenglorGlobal.src` / `.dat` | Core and helper functions (EKI socket communication, unit and rotation conversions, error handling). |
 | `wenglorMain.src` / `.dat` | Program entry point: connects, runs the selected user command, and closes the connection. |
 | `wenglorVision.xml` | EthernetKRL channel configuration (IP address and port of the robot server). |
+///
 
 !!! note
 
@@ -39,4 +43,4 @@ graph LR
 
 !!! note
 
-    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the KUKA example uses them.
+    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the KUKA example uses them.
