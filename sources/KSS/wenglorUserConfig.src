@@ -6,7 +6,7 @@ DEF wenglorUserConfig( )
    ;
    ; Module: wenglorUserConfig
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.1.0
+   ; Version: 2.2.0
    ;
    ; Description:
    ;   The file manages all user
@@ -36,12 +36,13 @@ DEF wenglorUserConfig( )
    ;W_USE_CASE[] = "camera_on_robot"
    ;----------------------------------------
    ;----------------------------------------
-   ; Comment out the correct line depending
-   ; on the selected calibration board
+   ; Selected calibration board
+   ; Calibration target: 
+   ; "zvzj001" | "zvzj002" | "zvzj003" | "zvzj004" |
+   ; "24x30mm" | "375x550mm" | "550x800mm"
+   ; if you are using zvzj005, replace with zvzj001 and
+   ; if you are using zvzj006, replace with zvzj002
    W_CALIBRATION_TARGET[] = "zvzj001"
-   ;W_CALIBRATION_TARGET[] = "zvzj002"
-   ;W_CALIBRATION_TARGET[] = "zvzj003"
-   ;W_CALIBRATION_TARGET[] = "zvzj004"
    ;----------------------------------------
    ;----------------------------------------
    ; Define the uniVision jobs

@@ -1,0 +1,30 @@
+<Channel Version="1.0">
+  <Connection Protocol="TCP">
+    <Client PeerIp="192.168.100.1" PeerPort="6008" />
+  </Connection>
+  <Behavior>
+    <UnloadWhenInterpreterReset>R_INT</UnloadWhenInterpreterReset>
+  </Behavior>
+  <Buffering Size="16" Strategy="ErrorWhenFull" Type="FIFO" />
+  <Receive Format="XML" Separator="sensor">
+    <Message Id="0" Name="Message">
+      <Value IsOptional="true" Name="command" Rule="sensor/reply/command" Type="String" />
+      <Value IsOptional="true" Name="return_code" Rule="sensor/reply/return_code" Type="Int" />
+      <Value IsOptional="true" Name="job_name" Rule="sensor/reply/job_name" Type="String" />
+      <Value IsOptional="true" Name="state" Rule="sensor/reply/state" Type="String" />
+      <Value IsOptional="true" Name="calib_accuracy" Rule="sensor/reply/calib_accuracy" Type="Real" />
+      <Value IsOptional="true" Name="num_objects" Rule="sensor/reply/num_objects" Type="Int" />
+      <Value IsOptional="true" Name="X" Rule="sensor/reply/object_pose/@X" Type="Real" />
+      <Value IsOptional="true" Name="Y" Rule="sensor/reply/object_pose/@Y" Type="Real" />
+      <Value IsOptional="true" Name="Z" Rule="sensor/reply/object_pose/@Z" Type="Real" />
+      <Value IsOptional="true" Name="RX" Rule="sensor/reply/object_pose/@RX" Type="Real" />
+      <Value IsOptional="true" Name="RY" Rule="sensor/reply/object_pose/@RY" Type="Real" />
+      <Value IsOptional="true" Name="RZ" Rule="sensor/reply/object_pose/@RZ" Type="Real" />
+      <Value IsOptional="true" Name="shape_model" Rule="sensor/reply/shape_model" Type="Int" />
+      <Value IsOptional="true" Name="additional_value" Rule="sensor/reply/additional_value" Type="String" />
+    </Message>
+  </Receive>
+  <Send>
+    <Message Id="0" Name="Message"><![CDATA[$$command:String$$]]></Message>
+  </Send>
+</Channel>

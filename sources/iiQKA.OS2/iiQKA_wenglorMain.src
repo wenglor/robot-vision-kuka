@@ -1,0 +1,220 @@
+DEF iiQKA_wenglorMain( )
+   ;**************************************
+   ;
+   ; Module: iiQKA_wenglorMain
+   ; Author: wenglor sensoric GmbH
+   ; Version: 1.0.0
+   ;
+   ; Description:
+   ;   This is the main file that manages
+   ;   the calibration of the camera to
+   ;   the robot and the object detection. 
+   ;
+   ;**************************************
+   ;FOLD INI;%{PE}
+      ;FOLD BASISTECH INI
+         GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+         INTERRUPT ON 3 
+         BAS (#INITMOV,0 )
+      ;ENDFOLD (BASISTECH INI)
+      ;FOLD USER INI
+         ;Make your modifications here
+         
+      ;ENDFOLD (USER INI)
+   ;ENDFOLD (INI)
+   ; Initialization of user configuration
+   iiQKA_wenglorUserConfig()
+   
+   ; Try to connect to wenglor robot server
+   setUpConnection()
+   
+   ; run singleDetection, multiDetection
+   ; or updateReferenceFrame
+   callUserCommand()
+   
+   ; Close connection with wenglor robot server
+   closeConnection()
+END
+
+DEF callUserCommand()
+   ; Call the desired procedure depending on the user command in the config
+   IF (StrComp(W_USER_COMMAND[], "singleDetection", #NOT_CASE_SENS)) THEN
+      singleDetection()
+   ELSE
+      IF (StrComp(W_USER_COMMAND[], "multiDetection", #NOT_CASE_SENS)) THEN
+         multiDetection()
+      ELSE
+         IF (StrComp(W_USER_COMMAND[], "updateReferenceFrame", #NOT_CASE_SENS)) THEN
+            updateReferenceFrame()
+         ENDIF
+      ENDIF
+   ENDIF
+END
+
+DEF singleDetection()
+   DECL FRAME objectPose
+   DECL INT shapeModel
+   DECL CHAR additionalValue[100]
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
+      RETURN
+   ENDIF
+   
+   ; Load detect objects job
+   loadJob(W_DETECT_OBJECTS_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect objects pose
+   moveToDetectObjectsPose()
+   
+   ; Get object pose
+   objectPose = detectObjects()
+   shapeModel = readShapeByIndex(0)
+   
+   ; Uncomment readValueByIndex function if you want to use an additional value.
+   ; Ensure the value is linked in the uniVision job.
+   ; additionalValue[] = readValueByIndex(0)
+   
+   ; Here you can add conditional checks for shape or userValue
+   
+   ; Move to object pose
+   moveTo(objectPose)
+END
+
+DEF multiDetection()
+   DECL FRAME objectPose
+   DECL INT numObjects
+   DECL INT index
+   DECL INT shapeModel
+   DECL CHAR additionalValue[100]
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
+      RETURN
+   ENDIF
+   
+   ; Load detect objects job
+   loadJob(W_DETECT_OBJECTS_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect objects pose
+   moveToDetectObjectsPose()
+   
+   ; Get object pose
+   objectPose = detectObjects()
+   numObjects = readNumObjects()
+   FOR index = 0 TO numObjects-1 STEP 1
+      objectPose = readPoseByIndex(index)
+      shapeModel = readShapeByIndex(index)
+      
+      ; Uncomment readValueByIndex function if you want to use an additional value.
+      ; Ensure the value is linked in the uniVision job.
+      ; additionalValue[] = readValueByIndex(index)
+      
+      ; Here you can add conditional checks for shape or userValue
+      
+      moveTo(objectPose)
+      moveToDetectObjectsPose()
+   ENDFOR 
+END
+
+DEF updateReferenceFrame()
+   DECL FRAME targetPose
+   DECL BOOL isCalibrated
+   
+   ; Calibration
+   isCalibrated = calibrateIfNeeded()
+   IF (isCalibrated == FALSE) THEN
+      RETURN
+   ENDIF
+   
+   ; Load target job
+   loadJob(W_DETECT_TARGET_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Move to detect target pose
+   moveToDetectTargetPose()
+   
+   ; Get target pose
+   targetPose = detectTarget()
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; update the reference frame, so position 
+   ; drift of platform can be compensated
+   setBase(W_BASE_NUM, W_BASE_NAME[], targetPose)
+   $BASE = BASE_DATA[W_BASE_NUM]
+   
+   ; Set W_MACHINE_POSES_TAUGHT to TRUE in user config after teaching the poses
+   IF (W_MACHINE_POSES_TAUGHT == FALSE) THEN
+      ; This handles the initial state for the first setup
+      MsgNotify("Reference frame updated. Teach poses relative to the reference frame and set W_MACHINE_POSES_TAUGHT to TRUE.");
+      RETURN
+   ENDIF
+   
+   ; The TurnBit must be set for each pose with the 
+   ; new reference frame. This function must 
+   ; therefore be called before each movement.      
+   ; Replace 'XP1' with the name of the taught pose.
+   ; NOTE: Poses that have been taught are marked 
+   ;       with an 'X' in their names.
+   XP1.T = getTurnBit(XP1)
+   ; Teach the movement and a pose using the new 
+   ; reference frame 
+   ;      
+   
+END
+
+DEFFCT BOOL calibrateIfNeeded()
+   DECL KrlMsg_T msg
+   DECL INT key
+   
+   ; Run calibration if no calibration data is available.
+   ; Check current state
+   updateCameraState()
+   IF (cameraError) THEN
+      MsgNotify(errorMsg[])
+      RETURN FALSE
+   ENDIF
+   
+   IF (wenglorCalibDone == FALSE) THEN
+      MsgNotify("No calibration found, starting calibration procedure.")
+      runCalibration()
+      
+      ; Check current state
+      updateCameraState()
+      IF (cameraError) THEN
+         MsgNotify(errorMsg[])
+         RETURN FALSE
+      ENDIF
+      
+      ; Check if calibration is available
+      IF (wenglorCalibDone == FALSE) THEN
+         MsgNotify("Calibration failed. Aborting program.")
+         RETURN FALSE
+      ELSE
+         ; Validate calibration
+         validateCalibration(W_SAFETY_OFFSET_MM)
+         msg = {modul[] "wenglorMain", Nr 1, msg_txt[] "Calibration successful. Proceed with detection?"}
+         key = showDialog(msg)
+         IF (key == 2) THEN
+            MsgNotify("Aborting program.")
+            RETURN FALSE
+         ENDIF
+      ENDIF
+   ENDIF
+   
+   RETURN TRUE
+ENDFCT

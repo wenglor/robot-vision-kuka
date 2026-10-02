@@ -6,7 +6,7 @@
 
 This repository contains an example KRL program to set up and start the generic vision interface to wenglor Machine Vision Devices on your KUKA robot.
 
-The robot vision example for KUKA consists of the following files, available in this repository's [`sources`](https://github.com/wenglor/robot-vision-kuka/tree/main/sources) directory:
+The example is available once per KUKA system software in this repository's [`sources`](https://github.com/wenglor/robot-vision-kuka/tree/main/sources) directory: the folder `KSS` for KUKA System Software KSS, and the folder `iiQKA.OS2` for KUKA System Software iiQKA.OS2. **Use only the set that matches your controller.** Both sets contain the same four components:
 
 /// html | div.col-widths
     attrs: {style: "--w1: 31%; --w2: 69%;"}
@@ -19,9 +19,12 @@ The robot vision example for KUKA consists of the following files, available in 
 | `wenglorVision.xml` | EthernetKRL channel configuration (IP address and port of the robot server). |
 ///
 
+In the `iiQKA.OS2` folder, every file carries the prefix `iiQKA_` — for example `iiQKA_wenglorUserConfig.src` and `iiQKA_wenglorVision.xml`.
+
 !!! note
 
-    - The example was tested with the **KUKA KRC4** robot controller, **KR 6 R1820** Arc robot arm, software **KSS 8.3.33** with **EthernetKRL 3.2.4**. It was additionally tested with **KRC5** robot controllers.
+    - The KSS example was tested with the **KUKA KRC4** robot controller, **KR 6 R1820** Arc robot arm, software **KSS 8.3.33** with **EthernetKRL 3.2.4**. It was additionally tested with **KRC5** robot controllers.
+    - The iiQKA.OS2 example requires a **KR C5-2** or **KR C5 micro-2** controller with **iiQKA.OS2 KSS9.2** or higher. See [Installation & Setup](1_0_0_installation.md) for the full requirements.
 
 ---
 
@@ -43,4 +46,4 @@ graph LR
 
 !!! note
 
-    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the KUKA example uses them.
+    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) and are **not** repeated here. This manual only describes how the KUKA example uses them.
