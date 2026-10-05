@@ -1,0 +1,25 @@
+DEFDAT  iiQKA_wenglorMain
+   ;**************************************
+   ;
+   ; Module: iiQKA_wenglorMain
+   ; Author: wenglor sensoric GmbH
+   ; Version: 1.0.0
+   ;
+   ; Description:
+   ;   This is the main file that manages
+   ;   the calibration of the camera to
+   ;   the robot and the object detection. 
+   ;
+   ;**************************************
+   ;FOLD EXTERNAL DECLARATIONS;%{PE}%MKUKATPBASIS,%CEXT,%VCOMMON,%P
+   ;FOLD BASISTECH EXT;%{PE}%MKUKATPBASIS,%CEXT,%VEXT,%P
+   EXT  BAS (BAS_COMMAND  :IN,REAL  :IN )
+   ;ENDFOLD (BASISTECH EXT)
+   ;FOLD USER EXT;%{E}%MKUKATPUSER,%CEXT,%VEXT,%P
+   ;Make your modifications here
+   
+   ;ENDFOLD (USER EXT)
+   ;ENDFOLD (EXTERNAL DECLARATIONS)
+   DECL E6POS XP1={X 0.0,Y 0.0,Z 0.0,A 0.0,B 0.0,C 0.0,S 2,T 2,E1 0.0,E2 0.0,E3 0.0,E4 0.0,E5 0.0,E6 0.0}
+   
+ENDDAT

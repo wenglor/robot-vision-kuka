@@ -1,0 +1,34 @@
+DEFDAT  iiQKA_wenglorGlobal PUBLIC
+   ;**************************************
+   ; 
+   ; Module: iiQKA_wenglorGlobal
+   ; Author: wenglor sensoric GmbH
+   ; Version: 1.0.0
+   ; 
+   ; Description:
+   ;   The file manages all used functions.
+   ; 
+   ;**************************************
+   GLOBAL CHAR W_CONNECTION[30]
+   GLOBAL CHAR W_USE_CASE[30]
+   GLOBAL CHAR W_CALIBRATION_TARGET[20]
+   GLOBAL CHAR W_CALIBRATION_JOB[200]
+   GLOBAL CHAR W_DETECT_OBJECTS_JOB[200]
+   GLOBAL CHAR W_DETECT_TARGET_JOB[200]
+   GLOBAL INT W_SAFETY_OFFSET_MM
+   GLOBAL INT W_NUM_CALIBRATION_POSES
+   GLOBAL CHAR W_USER_COMMAND[100]
+   GLOBAL BOOL W_MACHINE_POSES_TAUGHT=FALSE
+   GLOBAL INT W_BASE_NUM
+   GLOBAL CHAR W_BASE_NAME[24]
+   
+   GLOBAL CONST REAL M_PI=3.14159274
+   GLOBAL STRUC ROT_VEC REAL x,REAL y,REAL z
+   GLOBAL STRUC ROT_MAT REAL m11,REAL m12,REAL m13,REAL m21,REAL m22,REAL m23,REAL m31,REAL m32,REAL m33
+   
+   DECL INT W_EKI_STATUS
+   GLOBAL CHAR errorMsg[100]
+   GLOBAL BOOL cameraError=FALSE
+   GLOBAL BOOL wenglorCalibDone=FALSE
+   
+ENDDAT

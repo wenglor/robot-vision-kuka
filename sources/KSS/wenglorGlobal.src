@@ -6,7 +6,7 @@ DEF wenglorGlobal( )
    ;
    ; Module: wenglorGlobal
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.1.0
+   ; Version: 2.2.0
    ;
    ; Description:
    ;   The file manages all used functions.
@@ -318,11 +318,11 @@ DEF setReturnError(errorCode:IN)
       CASE 5002
          errorMsg[]="Badly formatted request";
       CASE 5003
-         errorMsg[]="No connnection to univision";
+         errorMsg[]="No connection to uniVision";
       CASE 5004
-         errorMsg[]="Unknown univision job name";
+         errorMsg[]="Unknown uniVision job name";
       CASE 5005
-         errorMsg[]="Badly configured univision job";
+         errorMsg[]="Badly configured uniVision job";
       CASE 5006
          errorMsg[]="Calibration failed";
       CASE 5007
@@ -333,6 +333,8 @@ DEF setReturnError(errorCode:IN)
          errorMsg[]="Bad or empty device robot vision message";
       CASE 5010
          errorMsg[]="Index error";
+      CASE 5011
+         errorMsg[]="Calibration pose variation insufficient";
       DEFAULT
          errorMsg[]="Unknown error code";
    ENDSWITCH

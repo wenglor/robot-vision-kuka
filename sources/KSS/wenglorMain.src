@@ -6,7 +6,7 @@ DEF wenglorMain( )
    ;
    ; Module: wenglorMain
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.1.0
+   ; Version: 2.2.0
    ;
    ; Description:
    ;   This is the main file that manages

@@ -2,6 +2,8 @@
 
 The example program implements a complete robot vision workflow: calibrating the camera to the robot, detecting objects, and moving to them. It is split into several KRL modules.
 
+The program flow is the same for both KUKA system software variants. The module names below are the ones used by the KSS file set; in the iiQKA.OS2 file set, each module carries the prefix `iiQKA_` — for example `iiQKA_wenglorMain`.
+
 ## Modules
 
 /// html | div.col-widths
@@ -72,7 +74,7 @@ The calibration process differs depending on whether the camera is mounted on th
 
 !!! note
 
-    For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual. The description here does not repeat them.
+    For the general calibration concepts — which calibration plate to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) in the wenglor robot vision manual. The description here does not repeat them.
 
 The movements are defined in `moveTocalibrationPose()` in `wenglorUserConfig.src`; `runCalibration()` in `wenglorGlobal` iterates through them and calls `calibration:add` at each pose.
 
@@ -103,7 +105,7 @@ After calibration, `validateCalibration()` performs a verification step: it move
 
 !!! note
 
-    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual.
+    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) in the wenglor robot vision manual.
 
 ## Detection
 
@@ -146,7 +148,7 @@ You can extend this with conditional checks on the shape model or an additional 
 
 ### `updateReferenceFrame`
 
-Used for mobile platforms and similar use cases (e.g. correcting positional deviations of a mobile platform in front of a machine or shelf). It detects the calibration target, updates the reference frame base, and — once the machine poses have been taught relative to that frame — moves to them. `detectTarget()` sends the `target:pose` command; see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual for details on this command:
+Used for mobile platforms and similar use cases (e.g. correcting positional deviations of a mobile platform in front of a machine or shelf). It detects the calibration target, updates the reference frame base, and — once the machine poses have been taught relative to that frame — moves to them. `detectTarget()` sends the `target:pose` command; see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/5_5_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual for details on this command:
 
 ```text
 targetPose = detectTarget()
@@ -169,7 +171,7 @@ On the first run, teach the poses relative to the reference frame, then set `W_M
 
 !!! note
 
-    `wenglorGlobal` also provides `calibrateToTarget()`, which sends the `calibration:target` command (camera-to-target calibration cached only in the device buffer, without writing a new calibration file). It is not called by the example program but is available for custom use — see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
+    `wenglorGlobal` also provides `calibrateToTarget()`, which sends the `calibration:target` command (camera-to-target calibration cached only in the device buffer, without writing a new calibration file). It is not called by the example program but is available for custom use — see [Target Pose and Camera-to-Target](https://wenglor.github.io/robot-vision-generic-string/5_5_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
 
 ## Units and conventions
 

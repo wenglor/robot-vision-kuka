@@ -1,12 +1,9 @@
-&ACCESS RVO
-&REL 23
-&PARAM EDITMASK = *
-DEFDAT  wenglorUserConfig
+DEFDAT  iiQKA_wenglorUserConfig
    ;**************************************
    ; 
-   ; Module: wenglorUserConfig
+   ; Module: iiQKA_wenglorUserConfig
    ; Author: wenglor sensoric GmbH
-   ; Version: 2.1.0
+   ; Version: 1.0.0
    ; 
    ; Description:
    ;   The file manages all user

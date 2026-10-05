@@ -1,0 +1,828 @@
+DEF iiQKA_wenglorGlobal( )
+   ;**************************************
+   ;
+   ; Module: iiQKA_wenglorGlobal
+   ; Author: wenglor sensoric GmbH
+   ; Version: 1.0.0
+   ;
+   ; Description:
+   ;   The file manages all used functions.
+   ;
+   ;**************************************
+END
+
+GLOBAL DEF setUpConnection()
+   ; Set up socket connection
+   W_EKI_STATUS = EKI_Load(W_CONNECTION[])
+   
+   ; Connect with camera
+   REPEAT
+      W_EKI_STATUS = EKI_Open(W_CONNECTION[])
+      ; Wait for connection to be established
+   UNTIL W_EKI_STATUS == EkiOk
+END
+
+GLOBAL DEF closeConnection()
+   W_EKI_STATUS = EKI_Close(W_CONNECTION[])
+   W_EKI_STATUS = EKI_Unload(W_CONNECTION[])
+END
+
+GLOBAL DEF updateCameraState()
+   DECL INT strSum
+   DECL CHAR rawState[100]
+   DECL INT i
+   DECL BOOL clearValue
+   
+   DECL CHAR command[100]
+   command[] = "state["
+   strSum = STRADD(command[], W_USE_CASE[])
+   strSum = STRADD(command[], "];")
+   
+   ; Clear buffer to have a defined state
+   FOR i=1 TO 100
+      rawState[i] = 0
+   ENDFOR
+   
+   ; Read state connection and calibration state from camera
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetString(W_CONNECTION[], "state", rawState[])
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])
+   
+   IF (rawState[1] == "1") THEN
+      cameraError = TRUE
+      errorMsg[] = "camera in connection error"
+   ELSE
+      ; reset error if there isn't any
+      cameraError = FALSE
+      clearValue = StrClear(errorMsg[])
+   ENDIF
+   
+   IF (rawState[2] == "1") THEN
+      wenglorCalibDone = TRUE
+   ELSE
+      wenglorCalibDone = FALSE
+   ENDIF   
+END
+
+GLOBAL DEF loadJob(jobName:IN)
+   DECL CHAR jobName[]
+   DECL CHAR command[250]
+   DECL INT strSum
+   
+   command[] = "job:change[";
+   strSum = STRADD(command[], jobName[])
+   strSum = STRADD(command[], "];")
+   sendSimpleCommand(command[])
+END
+
+GLOBAL DEF clearCalibrationBuffer()
+   ;Clears the calibration buffer in the vision system.
+   sendSimpleCommand("calibration:clear;")
+END
+
+GLOBAL DEF runCalibration()
+   DECL REAL calibAccuracy
+   DECL INT i
+   DECL KrlMsg_T msg
+   DECL INT key
+   
+   ; Executes the calibration procedure.
+   ; Check the camera state and if a calibration is already available
+   updateCameraState()
+   IF (wenglorCalibDone == TRUE) THEN
+      msg = {modul[] "wenglorGlobal", Nr 1, msg_txt[] "Calibration already done. Redo?"}
+      key = showDialog(msg)
+      IF (key == 2) THEN
+         MsgNotify("Calibration skipped.")
+         RETURN
+      ENDIF
+   ENDIF
+   
+   ; Clear the camera-side buffer to prevent old calibration data from being used.
+   clearCalibrationBuffer()
+   
+   ; Load job
+   loadJob(W_CALIBRATION_JOB[])
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   IF (StrComp(W_USE_CASE[], "camera_not_on_robot", #NOT_CASE_SENS)) THEN
+      msg = {modul[] "wenglorGlobal", Nr 2, msg_txt[] "Confirm when the calibration target is mounted and the correct tool is selected."}
+   ELSE
+      IF (StrComp(W_USE_CASE[], "camera_on_robot", #NOT_CASE_SENS)) THEN
+         msg = {modul[] "wenglorGlobal", Nr 2, msg_txt[] "Confirm when the calibration target is placed and the correct tool is selected."}
+      ELSE
+         MsgNotify("Unknown use case. Exiting program.")
+         RETURN
+      ENDIF
+   ENDIF
+   key = showDialog(msg)
+   IF (key == 2) THEN
+      MsgNotify("Calibration aborted.")
+      RETURN
+   ENDIF
+   
+   ; Movement to calibration poses
+   FOR i=1 to W_NUM_CALIBRATION_POSES
+      moveTocalibrationPose(i)
+      ; Wait time to ensure that the pose has been reached
+      WAIT SEC 1
+      addCalibrationPose()
+      IF (cameraError) THEN
+         RETURN
+      ENDIF
+   ENDFOR
+   
+   ; Calibrate camera
+   calibAccuracy = calculateCalibration()
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+   
+   ; Calibrate camera-to-ground in case of "camera_not_on_robot"
+   IF (StrComp(W_USE_CASE[], "camera_not_on_robot", #NOT_CASE_SENS)) THEN
+      moveToSafetyPose()
+      msg = {modul[] "wenglorGlobal", Nr 3, msg_txt[] "Confirm when calibration target was placed on object ground."}
+      key = showDialog(msg)
+      IF (key == 2) THEN
+         MsgNotify("Calibration to ground aborted.")
+         RETURN
+      ELSE
+         calibrateToGround()
+         IF (cameraError) THEN
+            RETURN
+         ENDIF
+         MsgNotify("Calibration to ground done.")
+      ENDIF
+   ENDIF
+END
+
+GLOBAL DEF addCalibrationPose()
+   DECL CHAR command[150]
+   DECL CHAR robotFrameChar[100]
+   DECL INT strSum
+   
+   ; Triggers the vision system and adds the provided pose for calibration.
+   robotFrameChar[] = getRobPos()
+   command[] = "calibration:add[";
+   strSum = STRADD(command[], getRobPos())
+   strSum = STRADD(command[], "];")
+   sendSimpleCommand(command[]);
+END
+
+GLOBAL DEFFCT REAL calculateCalibration()
+   DECL REAL reprojectionError
+   DECL INT returnCode
+   DECL INT strSum
+   DECL CHAR command[100]
+   DECL KrlMsg_T calcMsg
+   DECL KrlMsgPar_T parameter[3]
+   DECL KrlMsgOpt_T options
+   DECL INT msgHandle
+   DECL BOOL retVal
+   
+   ; Triggers the vision system to calculate calibration based on the added poses and captured images.
+   command[] = "calibration:calculate["
+   strSum = STRADD(command[], W_USE_CASE[])
+   strSum = STRADD(command[], ",")
+   strSum = STRADD(command[], W_CALIBRATION_TARGET[])
+   strSum = STRADD(command[], "];")
+   
+   reprojectionError = 0.0
+   returnCode = 0
+   
+   calcMsg = {modul[] "wenglorMain", NR 1, MSG_TXT[] "Calculation ongoing..."}
+   options = {vl_stop TRUE, clear_p_reset TRUE, clear_p_SAW TRUE, log_to_DB FALSE}
+   msgHandle = SET_KRLMSG (#WAITING, calcMsg, parameter[], options)
+   
+   EKISendAndReadNext(command[])
+   retVal = CLEAR_KRLMSG (msgHandle)   
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "calib_accuracy", reprojectionError)
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])
+   checkCameraReply(returnCode)
+   
+   RETURN reprojectionError
+ENDFCT
+
+GLOBAL DEF calibrateToGround()
+   DECL INT strSum
+   DECL CHAR command[200]
+   
+   ; Calibrates the camera-to-ground relation for the "camera_not_on_robot" use case only.
+   ; Also creates a new calibration file if the "camera_on_robot" use case was calibrated before with the "calibration:calculate" command.
+   IF (StrComp(W_USE_CASE[], "camera_on_robot", #NOT_CASE_SENS)) THEN
+      MsgNotify("Camera-to-ground calibration is not required here.")
+      RETURN
+   ENDIF
+   command[] = "calibration:ground["
+   strSum = STRADD(command[], W_CALIBRATION_TARGET[])
+   strSum = STRADD(command[], "];")
+   sendSimpleCommand(command[])
+   RETURN
+END
+
+GLOBAL DEF validateCalibration(safetyOffsetMm:IN)
+   DECL INT safetyOffsetMm 
+   DECL KrlMsg_T msg
+   DECL INT key
+   DECL FRAME targetPose
+   DECL CHAR command[200]
+   DECL INT strSum
+   
+   updateCameraState()
+   IF (wenglorCalibDone == FALSE) THEN
+      MsgNotify("Calibration not done, cannot validate. Exiting procedure.")
+      RETURN
+   ENDIF
+   
+   msg = {modul[] "wenglorGlobal", NR 4, MSG_TXT[] "Move to detection pose and confirm to validate calibration?"}
+   key = showDialog(msg)
+   IF (key == 2) THEN
+      MsgNotify("Calibration validation aborted.")
+      RETURN
+   ELSE
+      moveToDetectObjectsPose()
+      WAIT SEC 1
+      
+      command[] = "validate["
+      strSum = STRADD(command[], W_USE_CASE[])
+      strSum = STRADD(command[], ",")
+      strSum = STRADD(command[], getRobPos())
+      strSum = STRADD(command[], "];")
+      EKISendAndReadNext(command[])
+      targetPose = readPoseFromSocket()
+      targetPose.Z = targetPose.Z + safetyOffsetMm
+      moveTo(targetPose)
+   ENDIF
+   
+   IF (cameraError) THEN
+      RETURN
+   ENDIF
+END
+
+DEF sendSimpleCommand(command[]:IN)
+   DECL CHAR command[]
+   DECL INT returnCode
+   
+   returnCode = sendAndReadCode(command[])
+   checkCameraReply(returnCode)
+END
+
+DEFFCT INT sendAndReadCode(command[]:IN)
+   DECL CHAR command[]
+   DECL INT returnCode
+   
+   returnCode = 0
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])
+   
+   RETURN returnCode
+ENDFCT
+
+DEF checkCameraReply(returnCode:IN)
+   DECL INT returnCode
+   DECL BOOL clearOk
+   
+   IF (returnCode < 0) THEN
+      cameraError = TRUE
+      setReturnError(returnCode)
+   ELSE
+      cameraError = FALSE
+      clearOk = STRCLEAR(errorMsg[])
+   ENDIF
+END
+
+DEF setReturnError(errorCode:IN)
+   DECL INT errorCode
+   DECL INT errorCodeAbs
+   DECL INT strSum
+   DECL CHAR errorMessage[100]
+   
+   errorCodeAbs=ABS(errorCode);
+   SWITCH errorCodeAbs
+      CASE 5001
+         errorMsg[]="General Error";
+      CASE 5002
+         errorMsg[]="Badly formatted request";
+      CASE 5003
+         errorMsg[]="No connection to uniVision";
+      CASE 5004
+         errorMsg[]="Unknown uniVision job name";
+      CASE 5005
+         errorMsg[]="Badly configured uniVision job";
+      CASE 5006
+         errorMsg[]="Calibration failed";
+      CASE 5007
+         errorMsg[]="No calibration data";
+      CASE 5008
+         errorMsg[]="No object found";
+      CASE 5009
+         errorMsg[]="Bad or empty device robot vision message";
+      CASE 5010
+         errorMsg[]="Index error";
+      CASE 5011
+         errorMsg[]="Calibration pose variation insufficient";
+      DEFAULT
+         errorMsg[]="Unknown error code";
+   ENDSWITCH
+   
+   ; Show error message to user
+   strSum = STRADD(errorMessage[], "Camera error: ")
+   strSum = STRADD(errorMessage[], errorMsg[])
+   MsgNotify(errorMessage[])
+END
+
+GLOBAL DEFFCT CHAR[200] getJob()
+   DECL INT i
+   DECL CHAR command[200]
+   DECL INT returnCode
+   DECL CHAR jobName[200]
+   
+   ; Clear buffer to have a defined state
+   FOR i=1 TO 200
+      jobName[i] = 0
+   ENDFOR
+   
+   returnCode = 0
+   
+   command[] = "job:get;"
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetString(W_CONNECTION[], "job_name", jobName[])
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])   
+   
+   checkCameraReply(returnCode)
+   IF (cameraError) THEN
+      ; In case of error return "error", as it might be the least surprising value for an error case
+      RETURN "error"
+   ENDIF
+   
+   RETURN jobName[]
+ENDFCT
+
+GLOBAL DEFFCT FRAME detectObjects()
+   DECL CHAR command[200]
+   DECL INT strSum
+   
+   command[] = "detect["
+   strSum = STRADD(command[], W_USE_CASE[])
+   strSum = STRADD(command[], ",")
+   strSum = STRADD(command[], getRobPos())
+   strSum = STRADD(command[], "];")
+   EKISendAndReadNext(command[])
+   
+   RETURN readPoseFromSocket()   
+ENDFCT
+
+GLOBAL DEFFCT INT readNumObjects()
+   DECL CHAR command[200]
+   DECL INT returnCode
+   DECL INT numObjects
+   
+   returnCode = 0
+   numObjects = -1
+   
+   command[] = "num_objects:get;"   
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "num_objects", numObjects)
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])   
+   
+   checkCameraReply(returnCode)
+   IF (cameraError) THEN
+      ; In case of error return -1, as it might be the least surprising value for an error case
+      RETURN -1
+   ENDIF
+   
+   RETURN numObjects
+ENDFCT
+
+GLOBAL DEFFCT FRAME readPoseByIndex(index:in)
+   DECL INT index
+   DECL INT lastIndex
+   DECL CHAR command[200]
+   DECL STATE_T stringStatus
+   DECL INT strSum
+   
+   command[] = "pose:get["
+   lastIndex = STRLEN(command[])
+   SWRITE(command[], stringStatus, lastIndex, "%d" , index)
+   strSum = STRADD(command[], "];")
+   EKISendAndReadNext(command[])
+   
+   ; Error handling is done in function below
+   RETURN readPoseFromSocket()
+ENDFCT
+
+GLOBAL DEFFCT INT readShapeByIndex(index:in)
+   DECL INT index
+   DECL INT lastIndex
+   DECL CHAR command[200]
+   DECL STATE_T stringStatus
+   DECL INT strSum
+   DECL INT returnCode
+   DECL INT shapeModel
+   
+   returnCode = 0
+   shapeModel = -1
+   
+   command[] = "shape:get["
+   lastIndex = STRLEN(command[])
+   SWRITE(command[], stringStatus, lastIndex, "%d" , index)
+   strSum = STRADD(command[], "];")
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "shape_model", shapeModel)
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])
+   
+   checkCameraReply(returnCode)
+   IF (cameraError) THEN
+      ; In case of error return -1, as it might be the least surprising value for an error case
+      RETURN -1
+   ENDIF
+   
+   RETURN shapeModel
+ENDFCT
+
+GLOBAL DEFFCT CHAR[100] readValueByIndex(index:in)
+   DECL INT i
+   DECL INT index
+   DECL INT lastIndex
+   DECL CHAR command[200]
+   DECL STATE_T stringStatus
+   DECL INT strSum
+   DECL INT returnCode
+   DECL CHAR additionalValue[100]
+   
+   ; Clear buffer to have a defined state
+   FOR i=1 TO 100
+      additionalValue[i] = 0
+   ENDFOR
+   
+   returnCode = 0
+   
+   command[] = "value:get["
+   lastIndex = STRLEN(command[])
+   SWRITE(command[], stringStatus, lastIndex, "%d" , index)
+   strSum = STRADD(command[], "];")
+   EKISendAndReadNext(command[])
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetString(W_CONNECTION[], "additional_value", additionalValue[])
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])   
+   
+   checkCameraReply(returnCode)
+   IF (cameraError) THEN
+      ; In case of error return "error", as it might be the least surprising value for an error case
+      RETURN "error"
+   ENDIF
+   
+   RETURN additionalValue[]
+ENDFCT
+
+GLOBAL DEFFCT FRAME detectTarget()
+   DECL CHAR command[200]
+   DECL INT strSum
+   
+   command[] = "target:pose["
+   strSum = STRADD(command[], W_USE_CASE[])
+   strSum = STRADD(command[], ",")
+   strSum = STRADD(command[], W_CALIBRATION_TARGET[])
+   strSum = STRADD(command[], ",")
+   strSum = STRADD(command[], getRobPos())
+   strSum = STRADD(command[], "];")
+   EKISendAndReadNext(command[])
+   
+   RETURN readPoseFromSocket() 
+ENDFCT
+
+GLOBAL DEF calibrateToTarget()
+   DECL INT strSum
+   DECL CHAR command[100]
+   
+   ; Calibrates the camera-to-calibration-target relation for the given use case.
+   ; Does not create a new calibration file; Calibration is only saved temporarily in the vision device buffer.
+   command[] = "calibration:target["
+   strSum = STRADD(command[], W_USE_CASE[])
+   strSum = STRADD(command[], ",")
+   strSum = STRADD(command[], W_CALIBRATION_TARGET[])
+   strSum = STRADD(command[], "];")
+   sendSimpleCommand(command[])
+END
+
+GLOBAL DEF setBase(baseNum:IN, baseName[]:IN, targetPose:IN)
+   DECL INT i
+   DECL INT baseNum
+   DECL CHAR baseName[]
+   DECL FRAME targetPose
+   
+   BASE_DATA[baseNum]=targetPose
+   FOR i = 1 TO 24
+      BASE_NAME[baseNum, i] = " "
+   ENDFOR
+   BASE_NAME[baseNum,] = baseName[]
+   BASE_TYPE[baseNum] = #BASE
+END
+
+GLOBAL DEFFCT INT getTurnBit(pose:IN)
+   DECL E6POS pose
+   DECL E6AXIS axisCheck
+   DECL INT turnBit
+   
+   axisCheck = {A1 0.0, A2 0.0, A3 0.0, A4 0.0, A5 0.0, A6 0.0, E1 0.0, E2 0.0, E3 0.0, E4 0.0, E5 0.0, E6 0.0}
+   ERR_STATUS = 0
+   axisCheck = INVERSE(pose, $AXIS_ACT, ERR_STATUS)
+   
+   IF (ERR_STATUS <> 0) THEN
+      ;turnBit = -1
+      MsgNotify("TurnBit invalid")
+   ELSE
+      turnBit = 0
+      IF (axisCheck.A1 < 0) THEN
+         turnBit = turnBit + 1
+      ENDIF
+      IF (axisCheck.A2 < 0) THEN
+         turnBit = turnBit + 2
+      ENDIF
+      IF (axisCheck.A3 < 0) THEN
+         turnBit = turnBit + 4
+      ENDIF
+      IF (axisCheck.A4 < 0) THEN
+         turnBit = turnBit + 8
+      ENDIF
+      IF (axisCheck.A5 < 0) THEN
+         turnBit = turnBit + 16
+      ENDIF
+      IF (axisCheck.A6 < 0) THEN
+         turnBit = turnBit + 32
+      ENDIF
+   ENDIF
+   RETURN turnBit
+ENDFCT
+
+DEFFCT CHAR[100] getRobPos()
+   DECL E6POS tcpPoseComplete
+   DECL FRAME tcpPose
+   DECL ROT_MAT rotMat
+   DECL ROT_VEC rotVec
+   
+   tcpPoseComplete = $POS_ACT
+   ; Simplify to frame, as the robot vision server cannot handle external axis
+   ; Convert from mm to m
+   tcpPose.X = tcpPoseComplete.X / 1000
+   tcpPose.Y = tcpPoseComplete.Y / 1000
+   tcpPose.Z = tcpPoseComplete.Z / 1000
+   
+   ; Convert rotation from euler with zyx order to rotation vector
+   eulerzyxToRotMat(tcpPoseComplete.A, tcpPoseComplete.B, tcpPoseComplete.C, rotMat)
+   rotMatToRotVec(rotMat, rotVec)
+   
+   tcpPose.A = rotVec.x
+   tcpPose.B = rotVec.y
+   tcpPose.C = rotVec.z
+   
+   RETURN frameToString(tcpPose)
+ENDFCT
+
+DEFFCT FRAME readPoseFromSocket()
+   DECL FRAME objectPoseRaw
+   DECL FRAME objectPose
+   DECL REAL roll
+   DECL REAL pitch
+   DECL REAL yaw
+   DECL ROT_VEC rotVec
+   DECL ROT_MAT rotMat
+   DECL INT returnCode
+   DECL FRAME errorFrame
+   DECL E6POS currentPose
+   
+   ; Reset to have a defined state
+   returnCode = 0
+   objectPoseRaw.X = 0
+   objectPoseRaw.Y = 0
+   objectPoseRaw.Z = 0
+   objectPoseRaw.A = 0
+   objectPoseRaw.B = 0
+   objectPoseRaw.C = 0
+   
+   W_EKI_STATUS = EKI_GetInt(W_CONNECTION[], "return_code", returnCode)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "X", objectPoseRaw.X)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "Y", objectPoseRaw.Y)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "Z", objectPoseRaw.Z)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "RX", objectPoseRaw.C)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "RY", objectPoseRaw.B)
+   W_EKI_STATUS = EKI_GetReal(W_CONNECTION[], "RZ", objectPoseRaw.A)
+   W_EKI_STATUS = EKI_DeleteReceivedData(W_CONNECTION[])
+   
+   checkCameraReply(returnCode)
+   IF (cameraError) THEN
+      ; In case of error return current pose
+      currentPose = $POS_ACT
+      errorFrame.X = currentPose.X
+      errorFrame.Y = currentPose.Y
+      errorFrame.Z = currentPose.Z
+      errorFrame.A = currentPose.A
+      errorFrame.B = currentPose.B
+      errorFrame.C = currentPose.C
+      RETURN errorFrame
+   ENDIF
+   
+   ; Convert object pose from camera format to robot format
+   rotVec.x = objectPoseRaw.C
+   rotVec.y = objectPoseRaw.B
+   rotVec.z = objectPoseRaw.A
+   
+   rotVecToTotMat(rotVec,rotMat)
+   rotMatToEulerzyx(rotMat,yaw, pitch, roll)
+   
+   objectPose.X = objectPoseRaw.X * 1000
+   objectPose.Y = objectPoseRaw.Y * 1000
+   objectPose.Z = objectPoseRaw.Z * 1000
+   objectPose.A = yaw
+   objectPose.B = pitch
+   objectPose.C = roll
+   
+   RETURN objectPose
+ENDFCT
+
+DEFFCT REAL radToDeg(angleRad:IN)
+   DECL REAL angleRad
+   DECL REAL angleDeg
+   angleDeg = angleRad * 180/M_PI
+   RETURN angleDeg
+ENDFCT
+
+DEFFCT REAL degToRad(angleDeg:IN)
+   DECL REAL angleDeg
+   DECL REAL angleRad
+   angleRad = angleDeg * M_PI/180
+   RETURN angleRad
+ENDFCT
+
+DEF rotVecToTotMat(rotVec:IN, rotMat:OUT)
+   DECL ROT_VEC rotVec
+   DECL ROT_MAT rotMat
+   DECL REAL theta, sinTheta, cosTheta, oneMinusCosTheta
+   DECL REAL vx, vy, vz
+   
+   ; Convert radiant values to degrees, as geometric function of KUKA require it
+   rotVec.x = radToDeg(rotVec.x)
+   rotVec.y = radToDeg(rotVec.y)
+   rotVec.z = radToDeg(rotVec.z)
+   
+   ; Assume rotationVector is given with magnitude as the rotation angle
+   theta = SQRT((rotVec.x*rotVec.x) + (rotVec.y* rotVec.y) + (rotVec.z * rotVec.z))
+   vx = rotVec.x / theta
+   vy = rotVec.y / theta
+   vz = rotVec.z / theta
+   
+   sinTheta = SIN(theta)
+   cosTheta = COS(theta)
+   oneMinusCosTheta = 1 - cosTheta
+   
+   ; Manually compute each element of the rotation matrix
+   rotMat.m11 = cosTheta + vx*vx*oneMinusCosTheta
+   rotMat.m12 = vx*vy*oneMinusCosTheta - vz*sinTheta
+   rotMat.m13 = vx*vz*oneMinusCosTheta + vy*sinTheta
+   rotMat.m21 = vy*vx*oneMinusCosTheta + vz*sinTheta
+   rotMat.m22 = cosTheta + vy*vy*oneMinusCosTheta
+   rotMat.m23 = vy*vz*oneMinusCosTheta - vx*sinTheta
+   rotMat.m31 = vz*vx*oneMinusCosTheta - vy*sinTheta
+   rotMat.m32 = vz*vy*oneMinusCosTheta + vx*sinTheta
+   rotMat.m33 = cosTheta + vz*vz*oneMinusCosTheta
+   
+END
+
+DEF rotMatToEulerzyx(rotMat:IN, yaw:OUT, pitch:OUT, roll:OUT)
+   DECL ROT_MAT rotMat
+   DECL REAL roll, pitch, yaw
+   
+   ; Calculate pitch
+   pitch = ATAN2(-rotMat.m31, SQRT((rotMat.m11 * rotMat.m11) + (rotMat.m21 * rotMat.m21)))
+   
+   ; Calculate yaw
+   yaw = ATAN2(rotMat.m21, rotMat.m11)
+   
+   ; Calculate roll
+   roll = ATAN2(rotMat.m32, rotMat.m33)
+END
+
+DEF eulerzyxToRotMat(yaw:IN, pitch:IN, roll:IN, rotMat:OUT)
+   DECL REAL yaw
+   DECL REAL roll
+   DECL REAL pitch
+   
+   DECL ROT_MAT rotMat
+   
+   DECL REAL cosRoll
+   DECL REAL sinRoll
+   DECL REAL cosPitch
+   DECL REAL sinPitch
+   DECL REAL cosYaw
+   DECL REAL sinYaw
+   
+   ; degrees, as SIN and COS require it
+   cosYaw = COS(yaw)
+   sinYaw = SIN(yaw)
+   cosPitch = COS(pitch)
+   sinPitch = SIN(pitch)
+   cosRoll = COS(roll)
+   sinRoll = SIN(roll)
+   
+   ; construct the rotation matrix R = Rz(yaw) * Ry(pitch) * Rx(roll)
+   rotMat.m11 = cosYaw * cosPitch
+   rotMat.m12 = (cosYaw * sinPitch * sinRoll) - (sinYaw * cosRoll)
+   rotMat.m13 = (cosYaw * sinPitch * cosRoll) + (sinYaw * sinRoll)
+   rotMat.m21 = sinYaw * cosPitch
+   rotMat.m22 = (sinYaw * sinPitch * sinRoll) + (cosYaw * cosRoll)
+   rotMat.m23 = (sinYaw * sinPitch * cosRoll) - (cosYaw * sinRoll)
+   rotMat.m31 = -sinPitch
+   rotMat.m32 = cosPitch * sinRoll
+   rotMat.m33 = cosPitch * cosRoll
+END
+
+DEF rotMatToRotVec(rotMat:IN, rotVec:OUT)
+   DECL ROT_MAT rotMat
+   DECL REAL angle
+   DECL REAL axisComponents[3]
+   DECL ROT_VEC rotVec
+   
+   ; Calculate the angle value of rotation, ACOS returns values in degrees
+   angle = ACOS((rotMat.m11 +rotMat.m22 + rotMat.m33 -1)/2)
+   
+   ; Calculate the axis components
+   axisComponents[1] = (rotMat.m32 - rotMat.m23) / (2 * SIN(angle))
+   axisComponents[2] = (rotMat.m13 - rotMat.m31) / (2 * SIN(angle))
+   axisComponents[3] = (rotMat.m21 - rotMat.m12) / (2 * SIN(angle))
+   
+   ; Convert to radiant as camera requires radiant values
+   angle = degToRad(angle)
+   
+   ; Calculate the rotation vector
+   rotVec.x = axisComponents[1] * angle
+   rotVec.y = axisComponents[2] * angle
+   rotVec.z = axisComponents[3] * angle
+END
+
+DEF appendRealToString(value:IN, addComma:IN, string[]:OUT)
+   DECL REAL value
+   DECL BOOL addComma
+   DECL INT lastIndex
+   DECL INT strAddRtn
+   DECL STATE_T stringStatus
+   DECL CHAR string[]
+   
+   lastIndex = STRLEN(string[])
+   SWRITE(string[], stringStatus, lastIndex, "%.6f" , value)
+   IF addComma == TRUE THEN
+      strAddRtn = STRADD(string[], ",")
+   ENDIF
+END
+
+DEFFCT CHAR[100] frameToString(tcpFrame:IN)
+   DECL FRAME tcpFrame
+   DECL CHAR tcpPoseString[100]
+   DECL INT strSum
+   
+   strSum = STRADD(tcpPoseString[], "[")
+   appendRealToString(tcpFrame.X, TRUE, tcpPoseString[])
+   appendRealToString(tcpFrame.Y, TRUE, tcpPoseString[])
+   appendRealToString(tcpFrame.Z, TRUE, tcpPoseString[])
+   appendRealToString(tcpFrame.A, TRUE, tcpPoseString[])
+   appendRealToString(tcpFrame.B, TRUE, tcpPoseString[])
+   appendRealToString(tcpFrame.C, FALSE, tcpPoseString[])
+   strSum = STRADD(tcpPoseString[], "]")
+   RETURN tcpPoseString[]
+ENDFCT
+
+GLOBAL DEFFCT INT showDialog(msg:IN)
+   DECL KrlMsg_T msg
+   DECL KrlMsgPar_T par[3]
+   DECL KrlMsgOpt_T opt
+   DECL KrlMsgDlgSK_T SK[7]
+   DECL INT nHandle
+   DECL INT key
+   
+   SK[1] = {sk_Type #value, sk_txt[] "Ok"}
+   SK[2] = {sk_Type #value, sk_txt[] "Cancel"}
+   nHandle = Set_KrlDlg(msg, par[], SK[], opt)
+   key = 0
+   IF (nHandle > 0) THEN
+      WHILE (Exists_KrlDlg(nHandle, key))
+         WAIT SEC 0.1
+      ENDWHILE
+   ENDIF
+   RETURN key
+ENDFCT
+
+DEF EKISendAndReadNext(command[]:IN)
+   DECL CHAR command[]
+   
+   W_EKI_STATUS = EKI_SetString(W_CONNECTION[], "command", command[]) 
+   W_EKI_STATUS = EKI_Send(W_CONNECTION[])
+   REPEAT
+      W_EKI_STATUS = EKI_ReadNext(W_CONNECTION[])
+   UNTIL W_EKI_STATUS == EkiOk
+END

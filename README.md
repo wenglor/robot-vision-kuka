@@ -1,8 +1,10 @@
 # Example KUKA KRL program files for the generic vision interface
 
-**Version:** 2.1.0
+**KSS example:** 2.2.0 · **iiQKA.OS2 example:** 1.0.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program [wenglorMain.src](sources/wenglorMain.src) that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program that you can adapt and customize for your application.
+
+The example is provided once per KUKA system software, in the [sources](sources) directory: the folder [`KSS`](sources/KSS) for KUKA System Software KSS, and the folder [`iiQKA.OS2`](sources/iiQKA.OS2) for iiQKA.OS2. **Use only the set that matches your controller.** Both sets contain the same four components — `wenglorUserConfig`, `wenglorGlobal`, `wenglorMain` (each `.src` and `.dat`) and the EthernetKRL channel configuration `wenglorVision.xml`. In the `iiQKA.OS2` folder, every file carries the prefix `iiQKA_` — for example `iiQKA_wenglorUserConfig.src`.
 
 > NOTE
 >
@@ -16,6 +18,8 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+  - [KSS](#kss)
+  - [iiQKA.OS2](#iiqkaos2)
 - [Running the Sample Program](#running-the-sample-program)
 - [Configuration](#configuration)
   - [Network Setup (`wenglorVision.xml`)](#network-setup-wenglorvisionxml)
@@ -31,37 +35,73 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 ## Prerequisites
 
 - Basic knowledge of **KRL** (KUKA Robot Language)
-- **EthernetKRL** support
 - KUKA Robot Controller (KRC) with KRL support
-- [B60](https://www.wenglor.com/en/Machine-Vision/Smart-Cameras-and-Vision-Sensors/Smart-Camera-B60/c/cxmCID221375) (firmware >= 1.3) or [Machine Vision Controller (MVC)](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Controllers/c/cxmCID221381) (firmware >= 1.0)
-- A [uniVision](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Software/Image-Processing-Software-uniVision-3/c/cxmCID222459) job for calibration and object detection
+- **EthernetKRL** (EKI) support — on iiQKA.OS2 this is the **iiQKA.EthernetKRL** option package
+- [B60](https://www.wenglor.com/B60) (firmware >= 1.3) or [Machine Vision Controller (MVC)](https://www.wenglor.com/MachineVisionController) (firmware >= 1.0)
+- A [uniVision](https://www.wenglor.com/uniVision3) job for calibration and object detection
+
+Requirements per system software:
+
+| System software | Controller | Tested software | Additional requirements |
+|-----------------|------------|-----------------|-------------------------|
+| KSS | KRC4, KRC5 | KSS 8.3.33 with EthernetKRL 3.2.4 | — |
+| iiQKA.OS2 | KR C5-2, KR C5 micro-2 | iiQKA.OS2 KSS9.2 or higher with iiQKA.EthernetKRL V6.1.2 | PC software iiQWorks.Cockpit 1.3 and iiQWorks.Sim 1.2 |
+
+> NOTE
+>
+> The KSS reference setup was tested on a KRC4 with a KR 6 R1820 Arc robot arm, and additionally on KRC5 controllers.
 
 ---
 
 ## Installation
 
-1. Get the files from the [sources](sources) directory.
-2. Copy them to the robot controller.
+Pick the file set that matches your controller and follow the corresponding section below.
+
+### KSS
+
+1. Get the files from the [`KSS`](sources/KSS) folder.
+2. In [wenglorVision.xml](sources/KSS/wenglorVision.xml), adjust the IP address of the Machine Vision Device (by default `192.168.100.1`) and the port of the robot server (by default `6008`).
+3. Copy the files to the robot controller.
 
    | Sources                                        | Destination                                      |
    |------------------------------------------------|--------------------------------------------------|
-   | [wenglorVision.xml](sources/wenglorVision.xml) | `C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\` |
+   | [wenglorVision.xml](sources/KSS/wenglorVision.xml) | `C:\KRC\ROBOTER\Config\User\Common\EthernetKRL\` |
    | .src and .dat files                            | `KRC:\R1\Program\`                               |
 
-3. Follow the [configuration](#configuration) steps.
-4. Run the program [wenglorMain.src](sources/wenglorMain.src) on your robot.
+4. Follow the [configuration](#configuration) steps.
+5. Run the program [wenglorMain.src](sources/KSS/wenglorMain.src) on your robot.
+
+### iiQKA.OS2
+
+On iiQKA.OS2 the files are not copied to the controller directly — use the KUKA PC software iiQWorks to transfer them.
+
+1. Get the files from the [`iiQKA.OS2`](sources/iiQKA.OS2) folder.
+2. In iiQWorks.Cockpit, open the `Software Repository`, select **iiQKA.EthernetKRL** version `6.1.2` and download it. Then, in iiQWorks.Sim, select the robot in the `Devices` tree and add the package to the controller from `Option packages configuration` → `Available options`.
+3. Go to `Option packages` → `iiQKA.EthernetKRL (V6.1.2)` → `Ethernet configuration` and import [iiQKA_wenglorVision.xml](sources/iiQKA.OS2/iiQKA_wenglorVision.xml). Select the imported `iiQKA_wenglorVision` channel and, in its `<Client>` element, adjust the IP address of the Machine Vision Device and the port of the robot server.
+4. Go to `PROGRAM`, right-click the `Program` folder, choose `Import` → `Import KRL directory` and select the `iiQKA.OS2` folder.
+5. Transfer the configuration and the robot programs to the robot with `CONFIGURATION` → `Deploy Configuration onto Controller`.
+6. Follow the [configuration](#configuration) steps.
+7. Select and run `iiQKA_wenglorMain` on the robot panel.
+
+> NOTE
+>
+> The [Installation & Setup](https://wenglor.github.io/robot-vision-kuka/1_0_0_installation/) page of the online manual walks through both procedures step by step, with screenshots.
 
 ---
 
 ## Running the Sample Program
 
 1. Connect to the robot controller.
-2. On the KUKA teach panel, load the wenglorMain.src program.
+2. On the KUKA teach panel, load the main module — `wenglorMain.src` on KSS, `iiQKA_wenglorMain` on iiQKA.OS2.
 3. Start execution and follow the console logs.
 
 ---
 
 ## Configuration
+
+> NOTE
+>
+> The parameters and the poses to teach are identical for both system software variants. Only the file and channel names differ: the KSS set uses `wenglorUserConfig.src` with the channel `wenglorVision`, the iiQKA.OS2 set uses `iiQKA_wenglorUserConfig.src` with the channel `iiQKA_wenglorVision`. The file names below are the KSS ones.
 
 ### Network Setup (`wenglorVision.xml`)
 
@@ -72,6 +112,8 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
     <TYPE>Server</TYPE>
 </EXTERNAL>
 ```
+
+On iiQKA.OS2, these values are not edited in the file directly — set them in the `<Client>` element of the `iiQKA_wenglorVision` channel in the iiQWorks Ethernet configuration, as described under [iiQKA.OS2](#iiqkaos2).
 
 ### Adjusting Parameters (`wenglorUserConfig.src`)
 
@@ -119,7 +161,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ### Teaching Poses and Defining Movements (`wenglorUserConfig.src`)
 
-If you taught more than 5 poses remember to update the number of calibration poses
+If you taught more than five poses, remember to update the number of calibration poses.
 
 <details>
    <summary>Click to see where to set the poses in the wenglorUserConfig.src file </summary>
@@ -197,7 +239,7 @@ END
 
 ### Communication Errors
 
-- Verify IP/port in [wenglorVision.xml](sources/wenglorVision.xml)
+- Verify IP/port in [wenglorVision.xml](sources/KSS/wenglorVision.xml) (KSS) or in the `iiQKA_wenglorVision` channel configuration (iiQKA.OS2)
 - Ensure the robot server on the Machine Vision Device is active
   - Go to the device website → Jobs → Processing Instance → Robot Server
 - Check network connectivity/firewall
