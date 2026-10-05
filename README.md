@@ -1,6 +1,6 @@
 # Example KUKA KRL program files for the generic vision interface
 
-**Version:** 2.1.0
+**KSS example:** 2.2.0 · **iiQKA.OS2 example:** 1.0.0
 
 This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a KUKA controller. The included `.src`, `.dat`, and `.xml` files form a working sample program that you can adapt and customize for your application.
 
